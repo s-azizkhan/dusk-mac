@@ -16,6 +16,13 @@ struct WarmthDial: View {
     let presetName: String
 
     @StateObject private var st = DialState()
+    @ObservedObject private var panel = PanelState.shared
+
+    // Glow breathes only while the panel is open; a stopped repeatForever costs nothing.
+    private func breathe(_ on: Bool) {
+        if on { withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) { st.breathe = true } }
+        else { withAnimation(.linear(duration: 0)) { st.breathe = false } }
+    }
     private let size: CGFloat = 224
     private let start = 120.0, sweep = 300.0
     private let lo = 500.0, hi = 6500.0
@@ -40,9 +47,8 @@ struct WarmthDial: View {
         .contentShape(Circle())
         .gesture(drag)
         .animation(.spring(response: 0.3, dampingFraction: 0.65), value: st.dragging)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 2.8).repeatForever(autoreverses: true)) { st.breathe = true }
-        }
+        .onAppear { breathe(panel.visible) }
+        .onChange(of: panel.visible) { _, v in breathe(v) }
         .accessibilityElement()
         .accessibilityLabel("Warmth")
         .accessibilityValue("\(Int(kelvin)) Kelvin, \(presetName)")

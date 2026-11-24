@@ -357,9 +357,32 @@ enum Grain {
 }
 
 /// Slow warm dust motes drifting upward, like light at sunset. Only runs while visible.
+/// Whether the panel is on screen. Every looping animation pauses when it isn't, so a closed panel costs nothing.
+final class PanelState: ObservableObject {
+    static let shared = PanelState()
+    @Published var visible = false
+}
+
+/// Watches the hosting window's occlusion (the menu-bar panel is ordered out, not destroyed, when closed).
+struct VisibilityWatcher: NSViewRepresentable {
+    final class V: NSView {
+        private var token: NSObjectProtocol?
+        override func viewDidMoveToWindow() {
+            if let token { NotificationCenter.default.removeObserver(token) }
+            guard let w = window else { return }
+            let update = { PanelState.shared.visible = w.occlusionState.contains(.visible) && w.isVisible }
+            token = NotificationCenter.default.addObserver(forName: NSWindow.didChangeOcclusionStateNotification, object: w, queue: .main) { _ in update() }
+            update()
+        }
+    }
+    func makeNSView(context: Context) -> V { V() }
+    func updateNSView(_ v: V, context: Context) {}
+}
+
 struct DustLayer: View {
     let tint: Color
     var count = 26
+    @ObservedObject private var panel = PanelState.shared
 
     private func r(_ i: Int, _ k: Int) -> Double {
         let x = sin(Double(i * 127 + k * 311)) * 43758.5453
@@ -367,7 +390,7 @@ struct DustLayer: View {
     }
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30)) { tl in
+        TimelineView(.animation(minimumInterval: 1 / 30, paused: !panel.visible)) { tl in
             Canvas { ctx, size in
                 let t = tl.date.timeIntervalSinceReferenceDate
                 for i in 0..<count {

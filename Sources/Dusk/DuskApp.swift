@@ -32,7 +32,11 @@ struct ContentView: View {
             header
             ZStack(alignment: .top) {
                 if settings {
-                    settingsPage
+                    // Settings can be taller than the main page (test results): scroll inside the same slot.
+                    ScrollView(.vertical, showsIndicators: false) { settingsPage.padding(.bottom, 12) }
+                        .frame(height: mainH.height > 0 ? mainH.height : nil)
+                        .mask(LinearGradient(stops: [.init(color: .black, location: 0), .init(color: .black, location: 0.92), .init(color: .clear, location: 1)],
+                                             startPoint: .top, endPoint: .bottom))
                         .transition(.asymmetric(insertion: .offset(x: 40).combined(with: .opacity),
                                                 removal: .offset(x: 40).combined(with: .opacity)))
                 } else {
@@ -60,6 +64,7 @@ struct ContentView: View {
             }
             .allowsHitTesting(false)
         }
+        .background(VisibilityWatcher())
         .background(Color(red: 0.11, green: 0.102, blue: 0.141).opacity(0.94))
         .background(RoundedWindow(radius: 20))
         .environment(\.colorScheme, .dark)
@@ -74,6 +79,7 @@ struct ContentView: View {
         .animation(.spring(response: 0.42, dampingFraction: 0.86), value: settings)
         .animation(spring, value: c.scheduleOn)
         .animation(spring, value: c.gammaOK)
+        .animation(spring, value: c.checks.map(\.text))
         .onChange(of: c.startHour) { haptic() }
         .onChange(of: c.endHour) { haptic() }
     }
@@ -126,8 +132,45 @@ struct ContentView: View {
     private var settingsPage: some View {
         VStack(spacing: 12) {
             VStack(spacing: 12) {
-                ToggleRow(icon: "waveform.path.ecg", title: "Flicker-free", sub: "Backlight at 100%, dim in software", on: $c.flickerFree, tint: .mint)
-                ToggleRow(icon: "square.grid.3x3.fill", title: "No dithering", sub: "Turns off temporal dithering", on: $c.antiDither, tint: .cyan)
+                ToggleRow(icon: "waveform.path.ecg", title: "Flicker-free", sub: Display.builtinIsMiniLED ? "Can't help mini-LED (XDR) screens" : "Stops the backlight pulsing when dimmed", on: $c.flickerFree, tint: .mint)
+                ToggleRow(icon: "square.grid.3x3.fill", title: "No dithering", sub: "Stops faint pixel shimmer", on: $c.antiDither, tint: .cyan)
+                Button { c.runChecks(); haptic() } label: {
+                    Label(c.checks.isEmpty ? "Test these" : "Test again", systemImage: "checkmark.seal")
+                        .font(.geist(12, .medium)).frame(maxWidth: .infinity).padding(.vertical, 7)
+                        .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(.white.opacity(0.08)))
+                }
+                .buttonStyle(PressStyle())
+                ForEach(c.checks) { k in
+                    HStack(alignment: .top, spacing: 8) {
+                        Image(systemName: k.state == .ok ? "checkmark.circle.fill" : k.state == .warn ? "exclamationmark.triangle.fill" : "minus.circle")
+                            .foregroundStyle(k.state == .ok ? .mint : k.state == .warn ? .orange : .secondary)
+                        Text(k.text).font(.geist(11)).foregroundStyle(.white.opacity(0.8)).fixedSize(horizontal: false, vertical: true)
+                    }
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .transition(.opacity.combined(with: .move(edge: .top)))
+                    Group {
+                        if k.id == "flicker" {
+                            WaveGraphic(duty: k.state == .ok ? nil : Display.builtinIsMiniLED ? 0.85 : 0.45, tint: k.state == .ok ? .mint : .orange)
+                        } else {
+                            DitherGraphic(shimmer: k.state != .ok)
+                        }
+                    }
+                    .transition(.opacity)
+                    Button {
+                        if k.id == "flicker" { ScreenTest.open(FlickerScreenTest()) }
+                        else { ScreenTest.open(DitherScreenTest(c: c), onClose: { [c] in Display.setDithering(disabled: c.antiDither) }) }
+                    } label: {
+                        Label("Try it on screen", systemImage: "rectangle.inset.filled")
+                            .font(.geist(11, .medium)).foregroundStyle(.white.opacity(0.85))
+                            .frame(maxWidth: .infinity, alignment: .leading)
+                    }
+                    .buttonStyle(PressStyle())
+                }
+                if c.checks.contains(where: { $0.id == "flicker" }) {
+                    Text("Or film the screen in slow motion with your phone at low brightness: dark rolling bands mean flicker.")
+                        .font(.geist(10.5)).foregroundStyle(.white.opacity(0.55)).fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                }
                 if !c.gammaOK {
                     Label("macOS ignored the color change, so the backlight was left alone.", systemImage: "exclamationmark.triangle.fill")
                         .font(.geist(11)).foregroundStyle(.orange)

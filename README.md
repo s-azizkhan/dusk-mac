@@ -115,6 +115,7 @@ No. Dusk makes no network requests and has no analytics. The source is all here.
 ## Known limitations
 
 - Private macOS APIs can change in any macOS update.
+- Flicker-free can't help mini-LED screens (14" and 16" MacBook Pro, 2021 and later). Their backlight pulses at about 15 kHz at every brightness, even 100%. Dusk turns flicker-free off by default on them.
 - Flicker reduction isn't measured with an oscilloscope yet. A slow-motion phone video is a quick check.
 - The panel's own dithering (FRC) cannot be controlled from software.
 - Some macOS 26 releases have gamma bugs; Dusk shows a warning when gamma is not applied.

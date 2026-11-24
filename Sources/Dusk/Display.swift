@@ -1,3 +1,4 @@
+import AppKit
 import CoreGraphics
 import Foundation
 import IOKit
@@ -33,10 +34,11 @@ enum Display {
 
     /// Applies warmth + software dim to every display. Returns false if readback disagrees.
     @discardableResult
-    static func applyGamma(kelvin: Double, dim: Double) -> Bool {
+    static func applyGamma(kelvin: Double, dim all: Double, builtinDim: Double? = nil) -> Bool {
         let (r, g, b) = rgb(kelvin: kelvin)
         var ok = true
         for id in activeDisplays() {
+            let dim = CGDisplayIsBuiltin(id) != 0 ? builtinDim ?? all : all
             CGSetDisplayTransferByFormula(id, 0, Float(r * dim), 1, 0, Float(g * dim), 1, 0, Float(b * dim), 1)
             var rMin: Float = 0, rMax: Float = 0, rGam: Float = 0
             var gMin: Float = 0, gMax: Float = 0, gGam: Float = 0
@@ -58,6 +60,30 @@ enum Display {
             IORegistryEntrySetCFProperty(svc, "enableDither" as CFString, (disabled ? kCFBooleanFalse : kCFBooleanTrue))
             IOObjectRelease(svc)
         }
+    }
+}
+
+extension Display {
+    /// Mini-LED (Liquid Retina XDR) built-in screens report a high EDR headroom. Their backlight
+    /// pulses (~15 kHz PWM) at every level, so holding it at 100% can't stop the flicker.
+    static var builtinIsMiniLED: Bool {
+        NSScreen.screens.contains { s in
+            let id = s.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID
+            return id.map { CGDisplayIsBuiltin($0) != 0 } == true && s.maximumPotentialExtendedDynamicRangeColorComponentValue >= 8
+        }
+    }
+
+    /// enableDither per framebuffer (true = dithering on). nil when the Mac has none (Intel).
+    static func ditherStates() -> [Bool]? {
+        var it: io_iterator_t = 0
+        guard IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching("IOMobileFramebufferAP"), &it) == KERN_SUCCESS else { return nil }
+        defer { IOObjectRelease(it) }
+        var out: [Bool] = []
+        while case let svc = IOIteratorNext(it), svc != 0 {
+            if let v = IORegistryEntryCreateCFProperty(svc, "enableDither" as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() as? Bool { out.append(v) }
+            IOObjectRelease(svc)
+        }
+        return out.isEmpty ? nil : out
     }
 }
 
