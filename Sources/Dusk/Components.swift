@@ -1,0 +1,163 @@
+import SwiftUI
+
+final class Flag: ObservableObject { @Published var on = false }
+
+let spring = Animation.spring(response: 0.38, dampingFraction: 0.78)
+
+extension Color {
+    static func warm(_ kelvin: Double) -> Color {
+        let c = Display.rgb(kelvin: kelvin)
+        return Color(red: c.r, green: c.g, blue: c.b)
+    }
+}
+
+struct Orb: View {
+    let color: Color
+    let on: Bool
+    let level: Double
+    @StateObject private var breatheF = Flag()
+    @StateObject private var spinF = Flag()
+    private var breathe: Bool { breatheF.on }
+    private var spin: Bool { spinF.on }
+
+    var body: some View {
+        ZStack {
+            Circle()
+                .fill(color.opacity(on ? 0.55 * level : 0))
+                .frame(width: 120, height: 120)
+                .blur(radius: 30)
+                .scaleEffect(breathe ? 1.15 : 0.9)
+
+            Circle()
+                .strokeBorder(color.opacity(on ? 0.5 : 0.12), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [1, 7]))
+                .frame(width: 96, height: 96)
+                .rotationEffect(.degrees(spin ? 360 : 0))
+
+            Circle()
+                .fill(RadialGradient(colors: [.white.opacity(0.95), color, color.opacity(0.65)],
+                                     center: .init(x: 0.3, y: 0.28), startRadius: 2, endRadius: 56))
+                .frame(width: 68, height: 68)
+                .overlay(Circle().strokeBorder(.white.opacity(0.4), lineWidth: 1))
+                .shadow(color: color.opacity(on ? 0.7 : 0), radius: 16)
+                .saturation(on ? 1 : 0)
+                .opacity(on ? 0.45 + 0.55 * level : 0.3)
+                .scaleEffect(on ? 1 : 0.88)
+
+            Image(systemName: on ? "sun.max.fill" : "moon.zzz.fill")
+                .font(.system(size: 20, weight: .semibold))
+                .foregroundStyle(.black.opacity(0.45))
+                .contentTransition(.symbolEffect(.replace))
+        }
+        .frame(height: 124)
+        .onAppear {
+            withAnimation(.easeInOut(duration: 3.4).repeatForever(autoreverses: true)) { breatheF.on = true }
+            withAnimation(.linear(duration: 40).repeatForever(autoreverses: false)) { spinF.on = true }
+        }
+    }
+}
+
+struct GlowSlider: View {
+    @Binding var value: Double
+    let range: ClosedRange<Double>
+    let colors: [Color]
+    let tint: Color
+    @StateObject private var dragF = Flag()
+    private var dragging: Bool { dragF.on }
+    private let knob: CGFloat = 24
+
+    var body: some View {
+        GeometryReader { g in
+            let span = max(g.size.width - knob, 1)
+            let t = (value - range.lowerBound) / (range.upperBound - range.lowerBound)
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(LinearGradient(colors: colors, startPoint: .leading, endPoint: .trailing))
+                    .frame(height: dragging ? 12 : 8)
+                    .overlay(Capsule().strokeBorder(.white.opacity(0.12), lineWidth: 0.5))
+                Circle()
+                    .fill(.white)
+                    .frame(width: knob, height: knob)
+                    .scaleEffect(dragging ? 1.18 : 1)
+                    .shadow(color: tint.opacity(0.85), radius: dragging ? 14 : 6)
+                    .shadow(color: .black.opacity(0.25), radius: 2, y: 1)
+                    .offset(x: span * t)
+            }
+            .frame(maxHeight: .infinity)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { v in
+                        dragF.on = true
+                        let p = min(max((v.location.x - knob / 2) / span, 0), 1)
+                        value = range.lowerBound + p * (range.upperBound - range.lowerBound)
+                    }
+                    .onEnded { _ in dragF.on = false }
+            )
+        }
+        .frame(height: 30)
+        .animation(.spring(response: 0.3, dampingFraction: 0.65), value: dragging)
+    }
+}
+
+struct Chip: View {
+    let preset: Preset
+    let selected: Bool
+    let ns: Namespace.ID
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            HStack(spacing: 6) {
+                Circle().fill(Color.warm(preset.kelvin)).frame(width: 9, height: 9)
+                    .shadow(color: Color.warm(preset.kelvin).opacity(0.8), radius: selected ? 4 : 0)
+                Text(preset.name).font(.system(size: 12, weight: .medium))
+            }
+            .padding(.horizontal, 10).padding(.vertical, 6)
+            .foregroundStyle(selected ? Color.primary : Color.secondary)
+            .background {
+                ZStack {
+                    Capsule().fill(.primary.opacity(0.06))
+                    if selected {
+                        Capsule().fill(Color.warm(preset.kelvin).opacity(0.28))
+                            .overlay(Capsule().strokeBorder(Color.warm(preset.kelvin).opacity(0.6), lineWidth: 1))
+                            .matchedGeometryEffect(id: "sel", in: ns)
+                    }
+                }
+            }
+        }
+        .buttonStyle(PressStyle())
+    }
+}
+
+struct PressStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .scaleEffect(configuration.isPressed ? 0.94 : 1)
+            .animation(.spring(response: 0.25, dampingFraction: 0.6), value: configuration.isPressed)
+    }
+}
+
+struct ToggleRow: View {
+    let icon: String
+    let title: String
+    let sub: String
+    @Binding var on: Bool
+    let tint: Color
+
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(on ? tint : .secondary)
+                .frame(width: 30, height: 30)
+                .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tint.opacity(on ? 0.2 : 0.07)))
+                .symbolEffect(.bounce, value: on)
+            VStack(alignment: .leading, spacing: 1) {
+                Text(title).font(.system(size: 13, weight: .medium))
+                Text(sub).font(.system(size: 11)).foregroundStyle(.secondary)
+            }
+            Spacer(minLength: 4)
+            Toggle("", isOn: $on).labelsHidden().toggleStyle(.switch).controlSize(.small).tint(tint)
+        }
+    }
+}

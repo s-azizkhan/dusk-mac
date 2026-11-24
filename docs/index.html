@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dusk: Free Blue Light Filter &amp; Flicker-Free Screen Dimmer for Mac</title>
+<meta name="description" content="Dusk is a free, open-source macOS menu-bar app. Warm your screen down to 500K, dim below minimum brightness, reduce PWM flicker and disable temporal dithering. Free alternative to f.lux, Night Shift and Sundown.">
+<meta name="keywords" content="blue light filter mac, night shift alternative, f.lux alternative, sundown alternative, screen dimmer mac, pwm flicker macbook, flicker free mac, temporal dithering apple silicon, red light filter mac, eye strain mac">
+<link rel="canonical" href="https://s-azizkhan.github.io/dusk-mac/">
+<link rel="icon" href="icon.png">
+<link rel="apple-touch-icon" href="icon.png">
+<meta name="theme-color" content="#0E0A2A">
+<meta property="og:type" content="website">
+<meta property="og:title" content="Dusk: free blue light filter and flicker-free dimmer for Mac">
+<meta property="og:description" content="Warm screen. Calm eyes. Free and open source. 500K warmth, dimming below minimum, PWM flicker-free mode, anti-dithering.">
+<meta property="og:url" content="https://s-azizkhan.github.io/dusk-mac/">
+<meta property="og:image" content="https://s-azizkhan.github.io/dusk-mac/icon.png">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "Dusk",
+      "alternateName": "Dusk for Mac",
+      "description": "Free, open-source macOS menu-bar app: blue light filter down to 500K, screen dimming below minimum brightness, PWM flicker-free mode and temporal dithering off on Apple silicon.",
+      "applicationCategory": "UtilitiesApplication",
+      "operatingSystem": "macOS 14 or later",
+      "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
+      "license": "https://opensource.org/licenses/MIT",
+      "downloadUrl": "https://github.com/s-azizkhan/dusk-mac/releases/latest",
+      "codeRepository": "https://github.com/s-azizkhan/dusk-mac",
+      "image": "https://s-azizkhan.github.io/dusk-mac/icon.png",
+      "author": {"@type": "Person", "name": "s-azizkhan", "url": "https://github.com/s-azizkhan"},
+      "featureList": ["Blue light filter 500K-6500K", "Dim below minimum brightness", "PWM flicker-free mode", "Disable temporal dithering", "Night schedule", "No account, no telemetry"]
+    },
+    {
+      "@type": "FAQPage",
+      "mainEntity": [
+        {"@type": "Question", "name": "Is there a free alternative to f.lux or Sundown for Mac?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Dusk is free and open source (MIT). It has a blue light filter down to 500K, dimming below minimum brightness, a PWM flicker-free mode and a switch to disable temporal dithering."}},
+        {"@type": "Question", "name": "How do I reduce PWM flicker on a MacBook?", "acceptedAnswer": {"@type": "Answer", "text": "Turn on Flicker-free in Dusk. It holds the built-in backlight at 100% and lowers brightness in software through the gamma table, so the backlight is not pulsed."}},
+        {"@type": "Question", "name": "How do I disable temporal dithering on Apple silicon?", "acceptedAnswer": {"@type": "Answer", "text": "In Dusk, open Display health and turn on No dithering. It sets enableDither to false on IOMobileFramebufferAP. Check with: ioreg -lw0 | grep -i enableDither."}},
+        {"@type": "Question", "name": "How is Dusk different from Night Shift?", "acceptedAnswer": {"@type": "Answer", "text": "Night Shift stops around 2700K and cannot dim below minimum brightness. Dusk goes down to 500K, dims to 5%, and adds flicker-free and anti-dithering modes."}},
+        {"@type": "Question", "name": "Does Dusk collect data?", "acceptedAnswer": {"@type": "Answer", "text": "No. Dusk makes no network requests and has no analytics. The source code is public on GitHub."}}
+      ]
+    }
+  ]
+}
+</script>
+<style>
+:root{--night:#0E0A2A;--indigo:#2A1D66;--rose:#F2507B;--ember:#FF9A4D;--sun:#FFE08A;--text:#F4EEFF;--muted:#B7AEDB;--card:rgba(255,255,255,.05);--line:rgba(255,255,255,.1)}
+*{box-sizing:border-box;margin:0}
+body{background:var(--night);color:var(--text);font:16px/1.6 -apple-system,BlinkMacSystemFont,"SF Pro Text",Inter,system-ui,sans-serif;-webkit-font-smoothing:antialiased}
+a{color:var(--sun)}
+.wrap{max-width:1040px;margin:0 auto;padding:0 20px}
+.hero{position:relative;overflow:hidden;padding:96px 0 80px;text-align:center;background:radial-gradient(60% 55% at 50% 38%,rgba(255,122,92,.35),transparent 70%),linear-gradient(180deg,var(--indigo),var(--night))}
+.hero img{width:132px;height:132px;filter:drop-shadow(0 18px 30px rgba(0,0,0,.45));animation:rise 1.2s cubic-bezier(.2,.8,.2,1) both}
+h1{font:700 clamp(34px,6vw,60px)/1.05 "SF Pro Display",-apple-system,system-ui,sans-serif;letter-spacing:-.02em;margin:28px 0 14px}
+h1 span{color:var(--ember)}
+.lead{max-width:640px;margin:0 auto;color:var(--muted);font-size:18px}
+.cta{display:inline-flex;gap:10px;align-items:center;margin-top:34px;padding:14px 26px;border-radius:999px;background:linear-gradient(90deg,var(--ember),var(--rose));color:#1a0c22;font-weight:700;text-decoration:none;box-shadow:0 8px 20px rgba(0,0,0,.35);transition:transform .2s,box-shadow .2s}
+.cta:hover{transform:translateY(-2px);box-shadow:0 12px 26px rgba(0,0,0,.45)}
+.sub{margin-top:14px;font-size:13px;color:var(--muted)}
+section{padding:72px 0}
+h2{font:700 30px/1.2 "SF Pro Display",-apple-system,system-ui,sans-serif;letter-spacing:-.01em;margin-bottom:28px;text-align:center}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:22px}
+.card h3{font-size:16px;margin-bottom:6px}
+.card p{color:var(--muted);font-size:14px}
+.dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:8px;vertical-align:middle}
+.table{overflow-x:auto;border:1px solid var(--line);border-radius:18px}
+table{width:100%;border-collapse:collapse;font-size:14px;min-width:560px}
+th,td{padding:12px 16px;text-align:left;border-bottom:1px solid var(--line)}
+th{color:var(--muted);font-weight:600}
+td.y{color:var(--sun)}
+tr:last-child td{border-bottom:0}
+details{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 20px;margin-bottom:10px}
+summary{cursor:pointer;font-weight:600}
+details p{color:var(--muted);margin-top:10px;font-size:15px}
+code{background:rgba(255,255,255,.08);padding:2px 6px;border-radius:6px;font-size:13px}
+pre{background:rgba(255,255,255,.06);border:1px solid var(--line);border-radius:14px;padding:16px;overflow-x:auto;font-size:13px}
+footer{padding:40px 0;color:var(--muted);font-size:13px;text-align:center;border-top:1px solid var(--line)}
+@keyframes rise{from{opacity:0;transform:translateY(24px) scale(.94)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<header class="hero">
+  <div class="wrap">
+    <img src="icon.png" alt="Dusk app icon, a sunset sun cut by horizontal bands" width="132" height="132">
+    <h1>Warm screen.<br><span>Calm eyes.</span></h1>
+    <p class="lead">Dusk is a free, open-source Mac menu-bar app. Blue light filter down to 500K, dimming below minimum brightness, PWM flicker-free mode and anti-dithering. No account. No tracking.</p>
+    <a class="cta" href="https://github.com/s-azizkhan/dusk-mac/releases/latest">Download for macOS</a>
+    <p class="sub">Free · MIT licensed · macOS 14+ · Apple silicon &amp; Intel</p>
+  </div>
+</header>
+
+<main>
+<section class="wrap" id="features">
+  <h2>Everything your eyes want after dark</h2>
+  <div class="grid">
+    <div class="card"><h3><span class="dot" style="background:var(--rose)"></span>Blue light filter to 500K</h3><p>From 6500K daylight to deep red. Warmer than Night Shift or f.lux.</p></div>
+    <div class="card"><h3><span class="dot" style="background:var(--ember)"></span>Dim below minimum</h3><p>Software dimming to 5% for dark rooms and late nights.</p></div>
+    <div class="card"><h3><span class="dot" style="background:var(--sun)"></span>Flicker-free mode</h3><p>Holds the MacBook backlight at 100% and dims in software, so PWM never pulses it.</p></div>
+    <div class="card"><h3><span class="dot" style="background:#7CE0C3"></span>No temporal dithering</h3><p>Turns off GPU dithering on Apple silicon (M1, M2, M3, M4).</p></div>
+    <div class="card"><h3><span class="dot" style="background:#8FB5FF"></span>Night schedule</h3><p>Warms up automatically during the hours you pick.</p></div>
+    <div class="card"><h3><span class="dot" style="background:var(--muted)"></span>Private by design</h3><p>No account, no analytics, no network calls. Open source.</p></div>
+  </div>
+</section>
+
+<section class="wrap" id="compare">
+  <h2>Dusk vs Night Shift vs f.lux vs Sundown</h2>
+  <div class="table"><table>
+    <tr><th></th><th>Dusk</th><th>Night Shift</th><th>f.lux</th><th>Sundown</th></tr>
+    <tr><td>Price</td><td class="y">Free</td><td>Free</td><td>Free</td><td>$4.99/mo, $39/yr, $79 lifetime</td></tr>
+    <tr><td>Open source</td><td class="y">Yes</td><td>No</td><td>No</td><td>No</td></tr>
+    <tr><td>Warmest</td><td class="y">500K</td><td>~2700K</td><td>1200K</td><td>500K</td></tr>
+    <tr><td>Dim below minimum</td><td class="y">Yes</td><td>No</td><td>No</td><td>Yes</td></tr>
+    <tr><td>PWM flicker-free</td><td class="y">Yes</td><td>No</td><td>No</td><td>Yes</td></tr>
+    <tr><td>Anti-dithering</td><td class="y">Yes</td><td>No</td><td>No</td><td>Yes</td></tr>
+  </table></div>
+  <p class="sub" style="text-align:center">Other apps' details from their public websites, November 2026.</p>
+</section>
+
+<section class="wrap" id="install">
+  <h2>Install in a minute</h2>
+  <pre>1. Download Dusk-macOS.zip from the latest release
+2. Move Dusk.app to Applications
+3. xattr -dr com.apple.quarantine /Applications/Dusk.app
+4. Open Dusk. The sun appears in your menu bar.</pre>
+</section>
+
+<section class="wrap" id="faq">
+  <h2>FAQ</h2>
+  <details><summary>Is there a free alternative to f.lux or Sundown for Mac?</summary><p>Yes. Dusk is free and open source (MIT), with a 500K blue light filter, dimming below minimum brightness, flicker-free mode and anti-dithering.</p></details>
+  <details><summary>How do I reduce PWM flicker on a MacBook?</summary><p>Turn on Flicker-free in Dusk. The backlight stays at 100% and brightness is lowered in software through the gamma table.</p></details>
+  <details><summary>How do I disable temporal dithering on Apple silicon?</summary><p>Open Display health in Dusk and turn on No dithering. Check with <code>ioreg -lw0 | grep -i enableDither</code>.</p></details>
+  <details><summary>How is Dusk different from Night Shift?</summary><p>Night Shift stops around 2700K. Dusk goes to 500K, dims to 5% and adds flicker-free and anti-dithering modes.</p></details>
+  <details><summary>Does Dusk help with sleep or eye strain?</summary><p>Dusk is a display utility, not a medical device. Many people find a warmer, dimmer screen more comfortable at night.</p></details>
+  <details><summary>Does Dusk collect data?</summary><p>No. No network requests, no analytics. Read the source on GitHub.</p></details>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">Dusk · MIT License · <a href="https://github.com/s-azizkhan/dusk-mac">GitHub</a> · <a href="llms.txt">llms.txt</a></div>
+</footer>
+</body>
+</html>
