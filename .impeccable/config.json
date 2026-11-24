@@ -1,0 +1,17 @@
+{
+  "detector": {
+    "ignoreRules": [],
+    "ignoreFiles": [],
+    "ignoreValues": [
+      {
+        "rule": "nested-cards",
+        "value": "*",
+        "files": [
+          "docs/index.html"
+        ],
+        "createdAt": "2026-11-24T14:51:41.435Z",
+        "reason": "Claude triage: the 'card' is the simulated Mac screen bezel and the inner one is the Dusk popover mock; nesting is the product demo, not layout"
+      }
+    ]
+  }
+}
