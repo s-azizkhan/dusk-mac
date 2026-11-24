@@ -126,4 +126,6 @@ Built on ideas from [Stillcolor](https://github.com/aiaf/Stillcolor), [MonitorCo
 
 MIT © s-azizkhan
 
+Built with love by [Aziz](https://justaziz.com?utm_source=dusk-github).
+
 <sub>Keywords: blue light filter mac, night shift alternative, f.lux alternative, sundown alternative, free screen dimmer mac, pwm flicker macbook, flicker free mac, disable temporal dithering apple silicon, dim screen below minimum brightness mac, red light filter mac, eye strain mac app, color temperature menu bar app, open source macOS utility.</sub>

@@ -35,6 +35,7 @@ struct ContentView: View {
             Divider().opacity(0.4)
             advanced
             footer
+            credit
         }
         .padding(18)
         .frame(width: 320)
@@ -128,6 +129,21 @@ struct ContentView: View {
                 .transition(.move(edge: .top).combined(with: .opacity))
             }
         }
+    }
+
+    private var credit: some View {
+        Link(destination: URL(string: "https://justaziz.com?utm_source=dusk-app")!) {
+            HStack(spacing: 4) {
+                Text("Built with")
+                Image(systemName: "heart.fill").foregroundStyle(Color.ember)
+                Text("by Aziz").underline()
+            }
+            .font(.geist(10.5))
+            .foregroundStyle(.tertiary)
+        }
+        .buttonStyle(.plain)
+        .frame(maxWidth: .infinity)
+        .help("justaziz.com")
     }
 
     private var footer: some View {
