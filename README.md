@@ -115,6 +115,7 @@ Dusk makes no network requests and has no analytics. The full source is in this 
 | Tagline | Warm screen. Calm eyes. |
 | Palette | Night `#0E0A2A` · Indigo `#2A1D66` · Rose `#F2507B` · Ember `#FF9A4D` · Sun `#FFE08A` |
 | Mark | Slit sun: a sun cut by horizontal bands in its lower half |
+| Fonts | Instrument Serif (display), Geist (text), Geist Mono (code). All SIL OFL 1.1, bundled in `Resources/Fonts` |
 | Icon source | `tools/make-icon.swift` regenerates `Resources/Dusk.icns` and `docs/icon.png` |
 
 ## Credits

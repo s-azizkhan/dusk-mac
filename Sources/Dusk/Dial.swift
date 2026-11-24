@@ -130,13 +130,13 @@ struct WarmthDial: View {
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
                     Text(verbatim: String(Int(kelvin)))
-                        .font(.system(size: 34, weight: .semibold, design: .rounded))
+                        .font(.serif(52))
                         .contentTransition(.numericText(value: kelvin))
-                    Text("K").font(.system(size: 14, weight: .medium, design: .rounded)).foregroundStyle(.secondary)
+                    Text("K").font(.serif(22)).foregroundStyle(.secondary)
                 }
                 .foregroundStyle(.white)
                 Text(enabled ? presetName : "Paused")
-                    .font(.system(size: 11, weight: .semibold))
+                    .font(.geist(11, .semibold))
                     .foregroundStyle(.white.opacity(0.55))
                     .contentTransition(.interpolate)
             }

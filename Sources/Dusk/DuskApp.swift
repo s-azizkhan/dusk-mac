@@ -2,6 +2,7 @@ import SwiftUI
 
 @main
 struct DuskApp: App {
+    init() { Fonts.register() }
     @StateObject private var c = Controller()
 
     var body: some Scene {
@@ -37,6 +38,7 @@ struct ContentView: View {
         }
         .padding(18)
         .frame(width: 320)
+        .font(.geist(13))
         .background(alignment: .top) {
             LinearGradient(colors: [tint.opacity(c.enabled ? 0.24 : 0.04), .clear], startPoint: .top, endPoint: .center)
                 .allowsHitTesting(false)
@@ -53,7 +55,7 @@ struct ContentView: View {
                 .renderingMode(.template)
                 .foregroundStyle(LinearGradient(colors: [Color(red: 1, green: 0.88, blue: 0.54), Color(red: 1, green: 0.6, blue: 0.3), Color(red: 0.95, green: 0.31, blue: 0.48)],
                                                 startPoint: .top, endPoint: .bottom))
-            Text("Dusk").font(.system(size: 15, weight: .bold, design: .rounded))
+            Text("Dusk").font(.serif(22))
             Spacer()
             GlowSwitch(isOn: $c.enabled, tint: tint, name: "Dusk", onIcon: "sun.max.fill", offIcon: "moon.fill")
         }
@@ -70,7 +72,7 @@ struct ContentView: View {
             HStack {
                 label("Brightness", icon: "sun.min.fill")
                 Spacer()
-                Text("\(Int(c.brightness * 100))%").font(.system(size: 12, weight: .medium, design: .rounded))
+                Text("\(Int(c.brightness * 100))%").font(.geist(12, .medium))
                     .foregroundStyle(.secondary).contentTransition(.numericText(value: c.brightness))
             }
             GlowSlider(value: $c.brightness, range: 0.05...1, colors: [tint.opacity(0.55), tint], tint: tint, fill: true,
@@ -99,9 +101,9 @@ struct ContentView: View {
         VStack(spacing: 10) {
             Button { moreF.on.toggle() } label: {
                 HStack {
-                    Text("Display health").font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+                    Text("Display health").font(.geist(12, .semibold)).foregroundStyle(.secondary)
                     Spacer()
-                    Image(systemName: "chevron.down").font(.system(size: 10, weight: .bold)).foregroundStyle(.secondary)
+                    Image(systemName: "chevron.down").font(.geist(10, .bold)).foregroundStyle(.secondary)
                         .rotationEffect(.degrees(more ? 180 : 0))
                 }
                 .contentShape(Rectangle())
@@ -124,7 +126,7 @@ struct ContentView: View {
                     }
                     if !c.gammaOK {
                         Label("macOS ignored gamma. Backlight pin skipped.", systemImage: "exclamationmark.triangle.fill")
-                            .font(.system(size: 11)).foregroundStyle(.orange)
+                            .font(.geist(11)).foregroundStyle(.orange)
                             .transition(.opacity)
                     }
                 }
@@ -135,14 +137,14 @@ struct ContentView: View {
 
     private var footer: some View {
         HStack {
-            Toggle("Launch at login", isOn: $c.launchAtLogin).toggleStyle(.checkbox).font(.system(size: 11))
+            Toggle("Launch at login", isOn: $c.launchAtLogin).toggleStyle(.checkbox).font(.geist(11))
             Spacer()
             Button("Quit") { c.shutdown(); NSApp.terminate(nil) }
-                .buttonStyle(.plain).font(.system(size: 11, weight: .medium)).foregroundStyle(.secondary)
+                .buttonStyle(.plain).font(.geist(11, .medium)).foregroundStyle(.secondary)
         }
     }
 
     private func label(_ t: String, icon: String) -> some View {
-        Label(t, systemImage: icon).font(.system(size: 12, weight: .semibold)).foregroundStyle(.secondary)
+        Label(t, systemImage: icon).font(.geist(12, .semibold)).foregroundStyle(.secondary)
     }
 }

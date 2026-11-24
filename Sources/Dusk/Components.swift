@@ -89,7 +89,7 @@ struct GlowSlider: View {
                         .fill(RadialGradient(colors: [.white.opacity(0.9), tint], center: .init(x: 0.35, y: 0.3), startRadius: 0, endRadius: 11))
                         .frame(width: knob - 8, height: knob - 8)
                     Image(systemName: icon(value))
-                        .font(.system(size: 9, weight: .heavy))
+                        .font(.geist(9, .heavy))
                         .foregroundStyle(.black.opacity(0.5))
                         .contentTransition(.symbolEffect(.replace))
                 }
@@ -98,7 +98,7 @@ struct GlowSlider: View {
 
                 // value bubble
                 Text(label(value))
-                    .font(.system(size: 11, weight: .semibold, design: .rounded).monospacedDigit())
+                    .font(.geist(11, .semibold).monospacedDigit())
                     .contentTransition(.numericText(value: value))
                     .padding(.horizontal, 8).padding(.vertical, 4)
                     .background(.regularMaterial, in: Capsule())
@@ -193,7 +193,7 @@ struct GlowSwitch: View {
                 .overlay {
                     if let s = isOn ? onIcon : offIcon {
                         Image(systemName: s)
-                            .font(.system(size: 10, weight: .bold))
+                            .font(.geist(10, .bold))
                             .foregroundStyle(isOn ? tint : Color(red: 0.35, green: 0.3, blue: 0.6))
                             .contentTransition(.symbolEffect(.replace))
                     }
@@ -233,7 +233,7 @@ struct Chip: View {
             HStack(spacing: 6) {
                 Circle().fill(Color.warm(preset.kelvin)).frame(width: 9, height: 9)
                     .shadow(color: Color.warm(preset.kelvin).opacity(0.8), radius: selected ? 4 : 0)
-                Text(preset.name).font(.system(size: 12, weight: .medium))
+                Text(preset.name).font(.geist(12, .medium))
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
             .foregroundStyle(selected ? Color.primary : Color.secondary)
@@ -270,14 +270,14 @@ struct ToggleRow: View {
     var body: some View {
         HStack(spacing: 10) {
             Image(systemName: icon)
-                .font(.system(size: 13, weight: .semibold))
+                .font(.geist(13, .semibold))
                 .foregroundStyle(on ? tint : .secondary)
                 .frame(width: 30, height: 30)
                 .background(RoundedRectangle(cornerRadius: 9, style: .continuous).fill(tint.opacity(on ? 0.2 : 0.07)))
                 .symbolEffect(.bounce, value: on)
             VStack(alignment: .leading, spacing: 1) {
-                Text(title).font(.system(size: 13, weight: .medium))
-                Text(sub).font(.system(size: 11)).foregroundStyle(.secondary)
+                Text(title).font(.geist(13, .medium))
+                Text(sub).font(.geist(11)).foregroundStyle(.secondary)
             }
             Spacer(minLength: 4)
             GlowSwitch(isOn: $on, tint: tint, name: title)
