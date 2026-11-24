@@ -18,8 +18,9 @@ struct DuskApp: App {
 struct ContentView: View {
     @ObservedObject var c: Controller
     @Namespace private var ns
-    @StateObject private var moreF = Flag()
-    private var more: Bool { moreF.on }
+    @StateObject private var settingsF = Flag()
+    @StateObject private var mainH = Measured()
+    private var settings: Bool { settingsF.on }
 
     private var tint: Color { Color.warm(c.kelvin) }
     private var presetName: String {
@@ -27,30 +28,44 @@ struct ContentView: View {
     }
 
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 14) {
             header
-            hero
-            brightness
-            presets
-            Divider().opacity(0.4)
-            advanced
+            ZStack(alignment: .top) {
+                if settings {
+                    settingsPage
+                        .transition(.asymmetric(insertion: .offset(x: 40).combined(with: .opacity),
+                                                removal: .offset(x: 40).combined(with: .opacity)))
+                } else {
+                    mainPage
+                        .background(GeometryReader { g in
+                            Color.clear.onAppear { mainH.height = g.size.height }
+                                .onChange(of: g.size.height) { _, h in mainH.height = h }
+                        })
+                        .transition(.asymmetric(insertion: .offset(x: -40).combined(with: .opacity),
+                                                removal: .offset(x: -40).combined(with: .opacity)))
+                }
+            }
+            .frame(height: mainH.height > 0 ? mainH.height : nil, alignment: .top)
             footer
-            credit
         }
-        .padding(18)
-        .frame(width: 320)
+        .padding(16)
+        .frame(width: 320, alignment: .top)
         .font(.geist(13))
+        .background {
+            ZStack(alignment: .top) {
+                LinearGradient(colors: [tint.opacity(c.enabled ? 0.26 : 0.04), .clear], startPoint: .top, endPoint: .center)
+                DustLayer(tint: tint).opacity(c.enabled ? 1 : 0.35)
+                Image(nsImage: Grain.image).resizable(resizingMode: .tile)
+                    .opacity(0.045).blendMode(.overlay)
+            }
+            .allowsHitTesting(false)
+        }
         .background(RoundedWindow(radius: 20))
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.08), lineWidth: 1).allowsHitTesting(false))
-        .background(alignment: .top) {
-            LinearGradient(colors: [tint.opacity(c.enabled ? 0.24 : 0.04), .clear], startPoint: .top, endPoint: .center)
-                .allowsHitTesting(false)
-        }
         .animation(spring, value: c.enabled)
-        .animation(spring, value: more)
+        .animation(.spring(response: 0.42, dampingFraction: 0.86), value: settings)
         .animation(spring, value: c.scheduleOn)
         .animation(spring, value: c.gammaOK)
-        .onChange(of: c.launchAtLogin) { haptic(.levelChange); Sound.shared.toggle(c.launchAtLogin) }
         .onChange(of: c.startHour) { haptic() }
         .onChange(of: c.endHour) { haptic() }
     }
@@ -61,72 +76,75 @@ struct ContentView: View {
                 .renderingMode(.template)
                 .foregroundStyle(LinearGradient(colors: [Color(red: 1, green: 0.88, blue: 0.54), Color(red: 1, green: 0.6, blue: 0.3), Color(red: 0.95, green: 0.31, blue: 0.48)],
                                                 startPoint: .top, endPoint: .bottom))
-            Text("Dusk").font(.serif(22))
+            Text(settings ? "Settings" : "Dusk").font(.serif(22))
+                .contentTransition(.opacity)
             Spacer()
+            Button { settingsF.on.toggle() } label: {
+                Image(systemName: settings ? "xmark" : "slider.horizontal.3")
+                    .font(.system(size: 12, weight: .semibold))
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(width: 28, height: 28)
+                    .background(.ultraThinMaterial, in: Circle())
+                    .overlay(Circle().strokeBorder(.white.opacity(0.12), lineWidth: 0.6))
+            }
+            .buttonStyle(PressStyle())
+            .foregroundStyle(.secondary)
+            .help(settings ? "Back" : "Settings")
+            .accessibilityLabel(settings ? "Close settings" : "Open settings")
             GlowSwitch(isOn: $c.enabled, tint: tint, name: "Dusk", onIcon: "sun.max.fill", offIcon: "moon.fill")
         }
     }
 
-    private var hero: some View {
-        WarmthDial(kelvin: $c.kelvin, enabled: $c.enabled, presetName: presetName)
-            .padding(.vertical, 4)
-            .help("Drag the ring to set warmth. Click the center to turn Dusk on or off.")
-    }
-
-    private var brightness: some View {
-        VStack(alignment: .leading, spacing: 6) {
-            label("Brightness", icon: "sun.min.fill")
-            BrightnessBars(value: $c.brightness, tint: tint)
-        }
-        .disabled(!c.enabled).opacity(c.enabled ? 1 : 0.45)
-    }
-
-    private var presets: some View {
-        FlowLayout(spacing: 6) {
-            ForEach(Preset.all) { p in
-                Chip(preset: p, selected: abs(p.kelvin - c.kelvin) < 1, ns: ns) {
-                    withAnimation(spring) { c.kelvin = p.kelvin }
-                }
-            }
-        }
-        .disabled(!c.enabled).opacity(c.enabled ? 1 : 0.45)
-    }
-
-    private var advanced: some View {
-        VStack(spacing: 10) {
-            Button { haptic(.generic); moreF.on.toggle() } label: {
-                HStack {
-                    Text("Display health").font(.geist(12, .semibold)).foregroundStyle(.secondary)
-                    Spacer()
-                    Image(systemName: "chevron.down").font(.geist(10, .bold)).foregroundStyle(.secondary)
-                        .rotationEffect(.degrees(more ? 180 : 0))
-                }
-                .contentShape(Rectangle())
-            }
-            .buttonStyle(.plain)
-
-            if more {
-                VStack(spacing: 12) {
-                    ToggleRow(icon: "waveform.path.ecg", title: "Flicker-free", sub: "Backlight at 100%, dim in software", on: $c.flickerFree, tint: .mint)
-                    ToggleRow(icon: "square.grid.3x3.fill", title: "No dithering", sub: "Turns off temporal dithering", on: $c.antiDither, tint: .cyan)
-                    ToggleRow(icon: "clock.fill", title: "Schedule", sub: "Warm up automatically at night", on: $c.scheduleOn, tint: .orange)
-                    if c.scheduleOn {
-                        HStack(spacing: 8) {
-                            Picker("", selection: $c.startHour) { ForEach(0..<24, id: \.self) { Text(String(format: "%02d:00", $0)).tag($0) } }
-                            Image(systemName: "arrow.right").font(.caption).foregroundStyle(.secondary)
-                            Picker("", selection: $c.endHour) { ForEach(0..<24, id: \.self) { Text(String(format: "%02d:00", $0)).tag($0) } }
+    private var mainPage: some View {
+        VStack(spacing: 14) {
+            WarmthDial(kelvin: $c.kelvin, enabled: $c.enabled, presetName: presetName)
+                .help("Drag the ring to set warmth. Click the center to turn Dusk on or off.")
+            VStack(alignment: .leading, spacing: 12) {
+                label("Brightness", icon: "sun.min.fill")
+                BrightnessBars(value: $c.brightness, tint: tint)
+                FlowLayout(spacing: 6) {
+                    ForEach(Preset.all) { p in
+                        Chip(preset: p, selected: abs(p.kelvin - c.kelvin) < 1, ns: ns) {
+                            withAnimation(spring) { c.kelvin = p.kelvin }
                         }
-                        .labelsHidden().pickerStyle(.menu)
-                        .transition(.move(edge: .top).combined(with: .opacity))
-                    }
-                    if !c.gammaOK {
-                        Label("macOS ignored gamma. Backlight pin skipped.", systemImage: "exclamationmark.triangle.fill")
-                            .font(.geist(11)).foregroundStyle(.orange)
-                            .transition(.opacity)
                     }
                 }
-                .transition(.move(edge: .top).combined(with: .opacity))
             }
+            .glassCard()
+            .disabled(!c.enabled).opacity(c.enabled ? 1 : 0.5)
+        }
+    }
+
+    private var settingsPage: some View {
+        VStack(spacing: 12) {
+            VStack(spacing: 12) {
+                ToggleRow(icon: "waveform.path.ecg", title: "Flicker-free", sub: "Backlight at 100%, dim in software", on: $c.flickerFree, tint: .mint)
+                ToggleRow(icon: "square.grid.3x3.fill", title: "No dithering", sub: "Turns off temporal dithering", on: $c.antiDither, tint: .cyan)
+                if !c.gammaOK {
+                    Label("macOS ignored the color change, so the backlight was left alone.", systemImage: "exclamationmark.triangle.fill")
+                        .font(.geist(11)).foregroundStyle(.orange)
+                        .transition(.opacity)
+                }
+            }
+            .glassCard()
+            VStack(spacing: 12) {
+                ToggleRow(icon: "clock.fill", title: "Schedule", sub: "Warm up automatically at night", on: $c.scheduleOn, tint: .orange)
+                if c.scheduleOn {
+                    HStack(spacing: 8) {
+                        Picker("", selection: $c.startHour) { ForEach(0..<24, id: \.self) { Text(String(format: "%02d:00", $0)).tag($0) } }
+                        Image(systemName: "arrow.right").font(.caption).foregroundStyle(.secondary)
+                        Picker("", selection: $c.endHour) { ForEach(0..<24, id: \.self) { Text(String(format: "%02d:00", $0)).tag($0) } }
+                    }
+                    .labelsHidden().pickerStyle(.menu)
+                    .transition(.opacity)
+                }
+            }
+            .glassCard()
+            VStack(spacing: 12) {
+                ToggleRow(icon: "power", title: "Launch at login", sub: "Start Dusk when you log in", on: $c.launchAtLogin, tint: .ember)
+                ToggleRow(icon: "speaker.wave.2.fill", title: "Sounds", sub: "Soft clicks on every control", on: $c.sounds, tint: .pink)
+            }
+            .glassCard()
         }
     }
 
@@ -141,27 +159,16 @@ struct ContentView: View {
             .foregroundStyle(.tertiary)
         }
         .buttonStyle(.plain)
-        .frame(maxWidth: .infinity)
         .help("justaziz.com")
     }
 
     private var footer: some View {
         HStack {
-            Toggle("Launch at login", isOn: $c.launchAtLogin).toggleStyle(.checkbox).font(.geist(11))
+            credit
             Spacer()
-            Button {
-                c.sounds.toggle()
-                if c.sounds { Sound.shared.toggle(true) }
-            } label: {
-                Image(systemName: c.sounds ? "speaker.wave.2.fill" : "speaker.slash.fill")
-                    .contentTransition(.symbolEffect(.replace))
-                    .frame(width: 18)
-            }
-            .buttonStyle(.plain).foregroundStyle(.secondary)
-            .help(c.sounds ? "Mute UI sounds" : "Turn on UI sounds")
-            .accessibilityLabel(c.sounds ? "Mute UI sounds" : "Turn on UI sounds")
             Button("Quit") { haptic(.generic); c.shutdown(); NSApp.terminate(nil) }
                 .buttonStyle(.plain).font(.geist(11, .medium)).foregroundStyle(.secondary)
+                .keyboardShortcut("q")
         }
     }
 

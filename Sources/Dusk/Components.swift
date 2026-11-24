@@ -309,3 +309,75 @@ struct FlowLayout: Layout {
         return out
     }
 }
+
+final class Measured: ObservableObject { @Published var height: CGFloat = 0 }
+
+/// Frosted glass card with a soft top highlight.
+struct GlassCard: ViewModifier {
+    var radius: CGFloat = 16
+    func body(content: Content) -> some View {
+        content
+            .padding(12)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
+            .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(.white.opacity(0.03)))
+            .overlay(
+                RoundedRectangle(cornerRadius: radius, style: .continuous)
+                    .strokeBorder(LinearGradient(colors: [.white.opacity(0.22), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom), lineWidth: 0.8)
+            )
+            .shadow(color: .black.opacity(0.18), radius: 8, y: 4)
+    }
+}
+
+extension View {
+    func glassCard(radius: CGFloat = 16) -> some View { modifier(GlassCard(radius: radius)) }
+}
+
+/// Fine film grain, generated once and tiled.
+enum Grain {
+    static let image: NSImage = {
+        let n = 96
+        var px = [UInt8](repeating: 0, count: n * n * 4)
+        for i in 0..<(n * n) {
+            let v = UInt8.random(in: 0...255)
+            px[i * 4] = v; px[i * 4 + 1] = v; px[i * 4 + 2] = v; px[i * 4 + 3] = 255
+        }
+        let rep = NSBitmapImageRep(bitmapDataPlanes: nil, pixelsWide: n, pixelsHigh: n, bitsPerSample: 8, samplesPerPixel: 4,
+                                   hasAlpha: true, isPlanar: false, colorSpaceName: .deviceRGB, bytesPerRow: n * 4, bitsPerPixel: 32)!
+        px.withUnsafeBufferPointer { memcpy(rep.bitmapData!, $0.baseAddress!, n * n * 4) }
+        let img = NSImage(size: NSSize(width: n, height: n))
+        img.addRepresentation(rep)
+        return img
+    }()
+}
+
+/// Slow warm dust motes drifting upward, like light at sunset. Only runs while visible.
+struct DustLayer: View {
+    let tint: Color
+    var count = 26
+
+    private func r(_ i: Int, _ k: Int) -> Double {
+        let x = sin(Double(i * 127 + k * 311)) * 43758.5453
+        return x - floor(x)
+    }
+
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30)) { tl in
+            Canvas { ctx, size in
+                let t = tl.date.timeIntervalSinceReferenceDate
+                for i in 0..<count {
+                    let speed = 4 + r(i, 1) * 10
+                    let y = size.height - (r(i, 2) * size.height + t * speed).truncatingRemainder(dividingBy: size.height + 20) + 10
+                    let x = r(i, 3) * size.width + sin(t * (0.2 + r(i, 4) * 0.3) + Double(i)) * 10
+                    let d = 1 + r(i, 5) * 2.2
+                    let a = 0.15 + 0.35 * (0.5 + 0.5 * sin(t * (0.6 + r(i, 6)) + Double(i)))
+                    let rect = CGRect(x: x - d * 2, y: y - d * 2, width: d * 4, height: d * 4)
+                    ctx.fill(Path(ellipseIn: rect), with: .color(tint.opacity(a * 0.25)))
+                    ctx.fill(Path(ellipseIn: rect.insetBy(dx: d * 1.5, dy: d * 1.5)), with: .color(.white.opacity(a)))
+                }
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
