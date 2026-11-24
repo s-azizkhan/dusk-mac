@@ -30,6 +30,7 @@ struct WarmthDial: View {
         ZStack {
             ticks
             ring
+            glassKnob
             disc
         }
         .frame(width: size, height: size)
@@ -57,17 +58,19 @@ struct WarmthDial: View {
     private var ticks: some View {
         Canvas { ctx, sz in
             let c = CGPoint(x: sz.width / 2, y: sz.height / 2)
+            let cur = Int((p * 60).rounded())
             for i in 0...60 {
                 let f = Double(i) / 60
                 let a = (start + sweep * f) * .pi / 180
                 let major = i % 10 == 0
-                let r1 = R - (major ? 12 : 7)
+                let here = i == cur
+                let r1 = R - (here ? 15 : major ? 12 : 7)
                 var path = Path()
                 path.move(to: CGPoint(x: c.x + cos(a) * r1, y: c.y + sin(a) * r1))
                 path.addLine(to: CGPoint(x: c.x + cos(a) * R, y: c.y + sin(a) * R))
                 let lit = f <= p + 0.0001
                 let color: Color = lit ? (major ? Self.sun : .ember.opacity(0.9)) : .white.opacity(major ? 0.28 : 0.14)
-                ctx.stroke(path, with: .color(color), style: StrokeStyle(lineWidth: major ? 2 : 1.2, lineCap: .round))
+                ctx.stroke(path, with: .color(here ? .white : color), style: StrokeStyle(lineWidth: here ? 2.6 : major ? 2 : 1.2, lineCap: .round))
             }
         }
     }
@@ -89,10 +92,32 @@ struct WarmthDial: View {
         .rotationEffect(.degrees(start))
     }
 
-    private var disc: some View {
+    /// Glass bead riding the end of the arc.
+    private var glassKnob: some View {
         let a = (start + sweep * p) * .pi / 180
-        let r = Rd - 17
+        let d: CGFloat = 24
         return ZStack {
+            Circle().fill(.ultraThinMaterial)
+            Circle().fill(.white.opacity(0.16))
+            Circle().fill(RadialGradient(colors: [Color.warm(kelvin).opacity(0.55), Color.warm(kelvin).opacity(0.1)], center: .init(x: 0.5, y: 0.75), startRadius: 0, endRadius: 14))
+            Circle().fill(LinearGradient(colors: [.white.opacity(0.65), .white.opacity(0.05), .clear], startPoint: .top, endPoint: .bottom))
+                .padding(1.5)
+            Ellipse().fill(.white.opacity(0.85))
+                .frame(width: d * 0.42, height: d * 0.16)
+                .blur(radius: 0.6)
+                .offset(y: -d * 0.27)
+            Circle().strokeBorder(LinearGradient(colors: [.white.opacity(0.9), .white.opacity(0.15)], startPoint: .top, endPoint: .bottom), lineWidth: 1)
+        }
+        .frame(width: d, height: d)
+        .environment(\.colorScheme, .dark)
+        .shadow(color: .black.opacity(0.45), radius: 4, y: 2)
+        .scaleEffect(st.dragging && !st.fromDisc ? 1.2 : 1)
+        .offset(x: cos(a) * Ra, y: sin(a) * Ra)
+        .allowsHitTesting(false)
+    }
+
+    private var disc: some View {
+        ZStack {
             Circle()
                 .fill(RadialGradient(colors: [Color(white: 0.17), Color(white: 0.06)], center: .init(x: 0.42, y: 0.35), startRadius: 0, endRadius: Rd * 1.1))
                 .overlay(Circle().fill(RadialGradient(colors: [Color.warm(kelvin).opacity(0.16), .clear], center: .center, startRadius: 0, endRadius: Rd)))
@@ -101,12 +126,6 @@ struct WarmthDial: View {
                 .shadow(color: .black.opacity(0.5), radius: 10, y: 4)
                 .frame(width: Rd * 2, height: Rd * 2)
                 .scaleEffect(st.dragging && st.fromDisc ? 0.97 : 1)
-
-            Circle()
-                .fill(Self.sun)
-                .frame(width: 10, height: 10)
-                .background(Circle().fill(Self.sun).blur(radius: 6).opacity(0.9))
-                .offset(x: cos(a) * r, y: sin(a) * r)
 
             VStack(spacing: 0) {
                 HStack(alignment: .firstTextBaseline, spacing: 1) {
