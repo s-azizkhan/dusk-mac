@@ -5,6 +5,7 @@
 - Repository: https://github.com/s-azizkhan/dusk-mac
 - Download: https://github.com/s-azizkhan/dusk-mac/releases/latest
 - Website: https://s-azizkhan.github.io/dusk-mac/
+- Windows version (preview): https://github.com/s-azizkhan/dusk-windows (download: https://github.com/s-azizkhan/dusk-windows/releases)
 - Platform: macOS 14 Sonoma or later, Apple silicon and Intel (universal)
 - License: MIT
 - Install (Homebrew): `brew install --cask s-azizkhan/tap/dusk`

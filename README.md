@@ -7,6 +7,7 @@ Free, open-source macOS menu-bar app that warms your screen down to 500K, dims b
 
 <p align="center">
 <a href="https://github.com/s-azizkhan/dusk-mac/releases/latest"><b>Download for macOS</b></a> ·
+<a href="https://github.com/s-azizkhan/dusk-windows/releases"><b>Windows (preview)</b></a> ·
 <a href="https://s-azizkhan.github.io/dusk-mac/">Website</a> ·
 <a href="#faq">FAQ</a>
 </p>
@@ -49,6 +50,10 @@ brew install --cask s-azizkhan/tap/dusk
 4. Open Dusk. The sun icon appears in the menu bar.
 
 Requires macOS 14 Sonoma or later.
+
+### Windows (preview)
+
+Dusk also runs on Windows 10 and 11, with the same panel. Download `Dusk.exe` from [dusk-windows releases](https://github.com/s-azizkhan/dusk-windows/releases). It's an early preview, so see [its README](https://github.com/s-azizkhan/dusk-windows#readme) for limits.
 
 ## Build from source
 
@@ -97,6 +102,9 @@ Night Shift stops near 2700K and can't dim further or fix flicker. Dusk goes to 
 
 ### Does Dusk help with eye strain or sleep?
 Dusk is a display utility, not a medical device. Many people find a warmer, dimmer screen more comfortable at night.
+
+### Is there a Windows version?
+Yes, an early preview: [Dusk for Windows](https://github.com/s-azizkhan/dusk-windows/releases). It has warmth, dimming, flicker-free mode and the night schedule. There's no anti-dithering on Windows yet.
 
 ### Does Dusk work with external monitors?
 Warmth and dimming work on all displays. Flicker-free mode applies to the built-in display only.
