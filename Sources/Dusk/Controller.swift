@@ -28,6 +28,7 @@ final class Controller: ObservableObject {
     @Published var startHour: Int { didSet { d.set(startHour, forKey: "startHour"); apply() } }
     @Published var endHour: Int { didSet { d.set(endHour, forKey: "endHour"); apply() } }
     @Published var gammaOK = true
+    @Published var sounds: Bool { didSet { d.set(sounds, forKey: "sounds") } }
     @Published var launchAtLogin: Bool {
         didSet { try? (launchAtLogin ? SMAppService.mainApp.register() : SMAppService.mainApp.unregister()) }
     }
@@ -42,6 +43,7 @@ final class Controller: ObservableObject {
         scheduleOn = d.bool(forKey: "scheduleOn")
         startHour = d.integer(forKey: "startHour")
         endHour = d.integer(forKey: "endHour")
+        sounds = d.object(forKey: "sounds") as? Bool ?? true
         launchAtLogin = SMAppService.mainApp.status == .enabled
 
         let nc = NSWorkspace.shared.notificationCenter

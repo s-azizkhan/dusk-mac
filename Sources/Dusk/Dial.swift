@@ -5,6 +5,7 @@ final class DialState: ObservableObject {
     @Published var breathe = false
     var fromDisc = false
     var lastSnap: Double?
+    var lastTick = -1
 }
 
 /// Rotary warmth dial: tick ring, glowing arc that grows as the screen warms,
@@ -167,11 +168,17 @@ struct WarmthDial: View {
                     st.lastSnap = nil
                 }
                 kelvin = (k / 10).rounded() * 10
+                let tick = Int(((hi - kelvin) / (hi - lo) * 60).rounded())
+                if tick != st.lastTick, st.lastSnap == nil || st.lastSnap != kelvin {
+                    st.lastTick = tick
+                    Sound.shared.tick(Double(tick) / 60)
+                }
             }
             .onEnded { v in
                 if st.fromDisc && hypot(v.translation.width, v.translation.height) < 4 {
                     enabled.toggle()
                     haptic(.levelChange)
+                    Sound.shared.toggle(enabled)
                 }
                 st.dragging = false
             }

@@ -47,7 +47,7 @@ struct ContentView: View {
         .animation(spring, value: more)
         .animation(spring, value: c.scheduleOn)
         .animation(spring, value: c.gammaOK)
-        .onChange(of: c.launchAtLogin) { haptic(.levelChange) }
+        .onChange(of: c.launchAtLogin) { haptic(.levelChange); Sound.shared.toggle(c.launchAtLogin) }
         .onChange(of: c.startHour) { haptic() }
         .onChange(of: c.endHour) { haptic() }
     }
@@ -71,17 +71,9 @@ struct ContentView: View {
     }
 
     private var brightness: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack {
-                label("Brightness", icon: "sun.min.fill")
-                Spacer()
-                Text("\(Int(c.brightness * 100))%").font(.geist(12, .medium))
-                    .foregroundStyle(.secondary).contentTransition(.numericText(value: c.brightness))
-            }
-            GlowSlider(value: $c.brightness, range: 0.05...1, colors: [tint.opacity(0.55), tint], tint: tint, fill: true,
-                       snaps: [0.25, 0.5, 0.75, 1], name: "Brightness",
-                       label: { "\(Int($0 * 100))%" },
-                       icon: { $0 < 0.4 ? "sun.min.fill" : "sun.max.fill" })
+        VStack(alignment: .leading, spacing: 6) {
+            label("Brightness", icon: "sun.min.fill")
+            BrightnessBars(value: $c.brightness, tint: tint)
         }
         .disabled(!c.enabled).opacity(c.enabled ? 1 : 0.45)
     }
@@ -142,6 +134,17 @@ struct ContentView: View {
         HStack {
             Toggle("Launch at login", isOn: $c.launchAtLogin).toggleStyle(.checkbox).font(.geist(11))
             Spacer()
+            Button {
+                c.sounds.toggle()
+                if c.sounds { Sound.shared.toggle(true) }
+            } label: {
+                Image(systemName: c.sounds ? "speaker.wave.2.fill" : "speaker.slash.fill")
+                    .contentTransition(.symbolEffect(.replace))
+                    .frame(width: 18)
+            }
+            .buttonStyle(.plain).foregroundStyle(.secondary)
+            .help(c.sounds ? "Mute UI sounds" : "Turn on UI sounds")
+            .accessibilityLabel(c.sounds ? "Mute UI sounds" : "Turn on UI sounds")
             Button("Quit") { haptic(.generic); c.shutdown(); NSApp.terminate(nil) }
                 .buttonStyle(.plain).font(.geist(11, .medium)).foregroundStyle(.secondary)
         }
