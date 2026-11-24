@@ -3,9 +3,9 @@
 > Dusk is a free, open-source (MIT) macOS menu-bar app: a blue light filter (6500K down to 500K), screen dimmer below minimum brightness, PWM flicker-free mode for MacBook built-in displays, and a switch to disable temporal dithering on Apple silicon. Free alternative to f.lux, Night Shift, Sundown and Iris. No account, no telemetry, no network.
 
 - Repository: https://github.com/s-azizkhan/dusk-mac
-- Download: https://github.com/s-azizkhan/dusk-mac/releases/latest
+- Download: https://github.com/s-azizkhan/dusk-mac/releases/latest/download/Dusk-macOS.zip
 - Website: https://s-azizkhan.github.io/dusk-mac/
-- Windows version (preview): https://github.com/s-azizkhan/dusk-windows (download: https://github.com/s-azizkhan/dusk-windows/releases)
+- Windows version (preview): https://github.com/s-azizkhan/dusk-windows (download: https://github.com/s-azizkhan/dusk-windows/releases/latest/download/Dusk.exe)
 - Platform: macOS 14 Sonoma or later, Apple silicon and Intel (universal)
 - License: MIT
 - Install (Homebrew): `brew install --cask s-azizkhan/tap/dusk`

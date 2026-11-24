@@ -6,8 +6,8 @@
 Free, open-source macOS menu-bar app that warms your screen down to 500K, dims below the lowest brightness, and reduces PWM flicker and temporal dithering on MacBooks.</p>
 
 <p align="center">
-<a href="https://github.com/s-azizkhan/dusk-mac/releases/latest"><b>Download for macOS</b></a> ·
-<a href="https://github.com/s-azizkhan/dusk-windows/releases"><b>Windows (preview)</b></a> ·
+<a href="https://github.com/s-azizkhan/dusk-mac/releases/latest/download/Dusk-macOS.zip"><b>Download for macOS</b></a> ·
+<a href="https://github.com/s-azizkhan/dusk-windows/releases/latest/download/Dusk.exe"><b>Windows (preview)</b></a> ·
 <a href="https://s-azizkhan.github.io/dusk-mac/">Website</a> ·
 <a href="#faq">FAQ</a>
 </p>
