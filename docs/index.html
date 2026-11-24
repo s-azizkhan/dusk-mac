@@ -37,13 +37,15 @@
       "codeRepository": "https://github.com/s-azizkhan/dusk-mac",
       "image": "https://s-azizkhan.github.io/dusk-mac/icon.png",
       "author": {"@type": "Person", "name": "s-azizkhan", "url": "https://github.com/s-azizkhan"},
-      "featureList": ["Blue light filter 500K-6500K", "Dim below minimum brightness", "PWM flicker-free mode", "Disable temporal dithering", "Night schedule", "No account, no telemetry"]
+      "featureList": ["Blue light filter 500K-6500K", "Sundown on/off animation", "Real brightness control with software dimming below minimum", "Built-in flicker and dithering self-test", "Dim below minimum brightness", "PWM flicker-free mode", "Disable temporal dithering", "Night schedule", "No account, no telemetry"]
     },
     {
       "@type": "FAQPage",
       "mainEntity": [
         {"@type": "Question", "name": "What is Dusk?", "acceptedAnswer": {"@type": "Answer", "text": "Dusk is a free, open-source macOS menu-bar app. It filters blue light from 6500K down to 500K, dims below minimum brightness, reduces PWM flicker and turns off temporal dithering on Apple silicon."}},
         {"@type": "Question", "name": "Is there a free alternative to f.lux or Sundown for Mac?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Dusk is free and open source (MIT). It has a blue light filter down to 500K, dimming below minimum brightness, a PWM flicker-free mode and a switch to disable temporal dithering."}},
+        {"@type": "Question", "name": "How do I check that flicker-free and No dithering are working on my Mac?", "acceptedAnswer": {"@type": "Answer", "text": "Open Settings in Dusk and press Test. It reads the backlight and dithering state back from the hardware, shows live graphics, and offers full-screen flicker and dithering tests."}},
+        {"@type": "Question", "name": "Does flicker-free help on mini-LED MacBook Pro screens?", "acceptedAnswer": {"@type": "Answer", "text": "No. Mini-LED MacBook Pros (14 and 16 inch, 2021 and later) pulse their backlight at every brightness, even 100%. Dusk detects this and leaves flicker-free off by default there."}},
         {"@type": "Question", "name": "How do I reduce PWM flicker on a MacBook?", "acceptedAnswer": {"@type": "Answer", "text": "Flicker-free is on by default in Dusk. It holds the built-in backlight at 100% and lowers brightness in software through the gamma table, so the backlight is not pulsed."}},
         {"@type": "Question", "name": "How do I disable temporal dithering on Apple silicon?", "acceptedAnswer": {"@type": "Answer", "text": "Dusk turns on No dithering by default (Display health). It sets enableDither to false on IOMobileFramebufferAP. Check with: ioreg -lw0 | grep -i enableDither."}},
         {"@type": "Question", "name": "How is Dusk different from Night Shift?", "acceptedAnswer": {"@type": "Answer", "text": "Night Shift stops around 2700K and cannot dim below minimum brightness. Dusk goes down to 500K, dims to 5%, and adds flicker-free and anti-dithering modes."}},
@@ -241,6 +243,11 @@ footer{border-top:1px solid var(--line);padding:48px 0;color:var(--faint);font-s
 footer .wrap{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap}
 footer a{text-decoration:none}footer a:hover{color:var(--text)}
 
+.sd-ctl{display:flex;justify-content:center;gap:10px;margin-top:22px}
+.sd-btn{border:1px solid var(--line);background:rgba(255,255,255,.06);color:var(--text);font:600 14px/1 inherit;padding:11px 18px;border-radius:999px;cursor:pointer;transition:background .25s,color .25s}
+.sd-btn[aria-pressed="true"]{background:#fff;color:#0b0914}
+.sd-warm{position:absolute;inset:0;mix-blend-mode:multiply;background:#ff9d5c;opacity:0;transition:opacity 2.2s var(--ease)}
+.sd-canvas{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
 @media (prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}.rv,.mk{opacity:1;transform:none}}
 </style>
 </head>
@@ -327,6 +334,30 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   </div>
 </section>
 
+<section id="sundown">
+  <div class="wrap">
+    <div style="text-align:center"><span class="eyebrow rv">New in 0.3</span></div>
+    <h2 class="display rv">Switch on, and <span class="accent">the sun sets.</span></h2>
+    <p class="intro rv d1">Turning Dusk on plays a short scene across your screen: the sun sinks, starry curtains close and burn away into embers. Turning it off opens them to a sunrise. It skips itself if you use Reduce motion.</p>
+    <div class="demo rv d2">
+      <div class="monitor">
+        <div class="screen" id="sdScreen">
+          <svg class="scene" viewBox="0 0 1600 1000" preserveAspectRatio="xMidYMid slice" aria-hidden="true">
+            <rect width="1600" height="1000" fill="url(#sky)"/>
+            <g fill="#fff" opacity=".85"><ellipse cx="360" cy="200" rx="140" ry="34"/><ellipse cx="1260" cy="240" rx="160" ry="30"/></g>
+            <path d="M0 620 L220 380 L380 520 L560 300 L760 560 L920 420 L1120 600 L1300 360 L1600 580 V1000 H0Z" fill="#6f8db8"/>
+            <path d="M0 680 L260 520 L460 640 L700 480 L940 650 L1180 520 L1420 650 L1600 600 V1000 H0Z" fill="#4c7a5c"/>
+            <rect y="700" width="1600" height="300" fill="url(#lake)"/>
+          </svg>
+          <div class="sd-warm" id="sdWarm"></div>
+          <canvas class="sd-canvas" id="sdCanvas" aria-hidden="true"></canvas>
+        </div>
+      </div>
+    </div>
+    <div class="sd-ctl rv"><button class="sd-btn" id="sdOn" aria-pressed="false">Switch on</button><button class="sd-btn" id="sdOff" aria-pressed="true">Switch off</button></div>
+  </div>
+</section>
+
 <section id="why">
   <div class="wrap">
     <h2 class="display rv">Screens are made <span class="accent">for daytime.</span></h2>
@@ -374,6 +405,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
       </svg>
       <p class="flick-note" id="fnote">Backlight pulses on and off hundreds of times a second at low brightness.</p>
     </div>
+    <p class="intro rv d1" style="margin-top:28px">Not sure it's working? Press <b>Test</b> in Dusk's settings: it reads the backlight back, shows a live trace, and opens a full-screen flicker test you can check with your own eyes. On mini-LED MacBook Pros the backlight pulses at every brightness, so Dusk tells you flicker-free can't help there.</p>
   </div>
 </section>
 
@@ -387,6 +419,9 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
       <div class="card rv"><div class="glow" style="background:#9d174d"></div><h3>Dim below minimum</h3><p>Go darker than the brightness keys allow, down to 5%.</p></div>
       <div class="card rv d1"><div class="glow" style="background:#6d28d9"></div><h3>Night schedule</h3><p>Warms on its own during the hours you choose.</p></div>
       <div class="card rv d2"><div class="glow" style="background:#1e40af"></div><h3>Seven presets</h3><p>Energy, Daylight, Evening, Night, Late, Deep and Midnight.</p></div>
+      <div class="card rv"><div class="glow" style="background:#be185d"></div><h3>Real brightness</h3><p>One slider sets your Mac's actual brightness and keeps going darker below the lowest step. It follows your brightness keys.</p></div>
+      <div class="card rv d1"><div class="glow" style="background:#0f766e"></div><h3>Test it yourself</h3><p>A Test button checks flicker-free and No dithering on your hardware, with live graphics and full-screen tests.</p></div>
+      <div class="card rv d2"><div class="glow" style="background:#4d7c0f"></div><h3>Light on battery</h3><p>About 0% CPU while it sits in the menu bar. Animations only run while you're looking.</p></div>
     </div>
   </div>
 </section>
@@ -423,7 +458,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 <section id="open">
   <div class="wrap">
     <h2 class="display rv">Free, and it <span class="accent">stays that way.</span></h2>
-    <p class="intro rv d1">No trial, no account, no tracking. The code is on GitHub.</p>
+    <p class="intro rv d1">No trial, no account, no tracking, and next to no battery. The code is on GitHub.</p>
     <div class="stats">
       <div class="stat rv"><b class="count" data-to="0" data-pre="$">$0</b><span>Forever</span></div>
       <div class="stat rv d1"><b class="count" data-to="0">0</b><span>Trackers</span></div>
@@ -441,6 +476,9 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
       <details><summary>Is there a free alternative to f.lux or Sundown for Mac?</summary><p>Yes. Dusk is free and open source (MIT), with a 500K blue light filter, dimming below minimum brightness, flicker-free mode and anti-dithering.</p></details>
       <details><summary>How do I reduce PWM flicker on a MacBook?</summary><p>Flicker-free is on by default in Dusk. The backlight stays at 100% and brightness is lowered in software through the gamma table.</p></details>
       <details><summary>How do I disable temporal dithering on Apple silicon?</summary><p>No Dithering is on by default in Dusk (Display Health). Check it with <code>ioreg -lw0 | grep -i enableDither</code>.</p></details>
+      <details><summary>How do I check flicker-free and No dithering are working?</summary><p>Open Settings in Dusk and press Test. It reads the hardware back and shows a live backlight trace and a zoomed pixel patch. "Try it on screen" opens full-screen tests: a racing bar for flicker, and a dark gradient you can flip dithering on and off over.</p></details>
+      <details><summary>Does the brightness slider change my Mac's real brightness?</summary><p>Yes. With flicker-free off, it moves the real screen brightness and only dims in software below the lowest step. With flicker-free on, the backlight stays at 100% and Dusk dims in software so it never pulses.</p></details>
+      <details><summary>Does flicker-free work on every MacBook?</summary><p>It helps screens that pulse their backlight when dimmed. Mini-LED MacBook Pros (14" and 16", 2021 and later) pulse at every brightness, even 100%, so it can't help there. Dusk spots this, says so, and leaves it off by default.</p></details>
       <details><summary>How is Dusk different from Night Shift?</summary><p>Night Shift stops around 2700K. Dusk goes to 500K, dims to 5% and adds flicker-free and anti-dithering modes.</p></details>
       <details><summary>Does Dusk help with sleep or eye strain?</summary><p>Dusk is a display utility, not a medical device. Many people find a warmer, dimmer screen more comfortable at night.</p></details>
       <details><summary>Why does macOS warn me when I open it?</summary><p>This early build is not notarised yet. Run <code>xattr -dr com.apple.quarantine /Applications/Dusk.app</code> once, then open it normally.</p></details>
@@ -514,6 +552,49 @@ const segs=document.querySelectorAll(".seg button"),wp=$("wpwm"),wf=$("wflat"),f
 segs.forEach(b=>b.onclick=()=>{segs.forEach(x=>x.classList.toggle("on",x===b));const flat=b.dataset.m==="flat";
   wp.style.transition=wf.style.transition="opacity .5s";wp.style.opacity=flat?0:1;wf.style.opacity=flat?1:0;
   fn.textContent=flat?"Backlight stays steady at full power. Dusk dims the image itself, so nothing pulses.":"Backlight pulses on and off hundreds of times a second at low brightness."});
+})();
+(()=>{const cv=document.getElementById("sdCanvas"),scr=document.getElementById("sdScreen"),warm=document.getElementById("sdWarm"),bOn=document.getElementById("sdOn"),bOff=document.getElementById("sdOff");
+if(!cv)return;const ctx=cv.getContext("2d"),D=2.2,still=matchMedia("(prefers-reduced-motion: reduce)").matches;
+const C={night:"14,10,42",indigo:"42,29,102",rose:"242,80,123",ember:"255,154,77",sun:"255,224,138"};
+const c=(k,a)=>`rgba(${C[k]},${Math.max(0,Math.min(1,a))})`;
+const ease=x=>x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2,seg=(x,a,b)=>Math.min(Math.max((x-a)/(b-a),0),1);
+const rnd=(i,k)=>{const v=Math.sin(i*12.9898+k*78.233)*43758.5453;return v-Math.floor(v)};
+let on=false,start=0,raf=0,W=0,H=0;
+function size(){const r=scr.getBoundingClientRect(),d=Math.min(devicePixelRatio||1,2);W=r.width;H=r.height;cv.width=W*d;cv.height=H*d;ctx.setTransform(d,0,0,d,0,0)}
+function lin(x0,y0,x1,y1,stops){const g=ctx.createLinearGradient(x0,y0,x1,y1);stops.forEach((s,i)=>g.addColorStop(i/(stops.length-1),s));return g}
+function frame(now){const t=(now-start)/1000,x=Math.min(t/D,1),w=W,h=H;ctx.clearRect(0,0,w,h);
+ const close=on?ease(seg(x,.08,.58)):1-ease(seg(x,.18,.78)),veil=on?1-seg(x,.7,.95):seg(x,0,.14)*(1-seg(x,.82,1)),
+ sunP=on?ease(seg(x,0,.62)):1-ease(seg(x,.25,.85)),stars=on?seg(x,.25,.6):1-seg(x,.3,.7),
+ flare=on?Math.sin(Math.PI*seg(x,.52,.8)):0,bloom=on?0:Math.sin(Math.PI*seg(x,.6,1)),embers=on?seg(x,.62,1):0;
+ const hz=h*.6,R=Math.min(w,h)*.15,sy=hz-R*.55+R*1.7*sunP,sa=veil*(1-seg(sunP,.85,1));
+ if(sa>0){let g=ctx.createRadialGradient(w/2,sy,R*.8,w/2,sy,R*3);g.addColorStop(0,c("ember",.4*sa));g.addColorStop(.5,c("rose",.12*sa));g.addColorStop(1,c("rose",0));ctx.fillStyle=g;ctx.fillRect(w/2-R*3,sy-R*3,R*6,R*6);
+  ctx.save();ctx.beginPath();ctx.rect(0,0,w,hz);ctx.clip();ctx.beginPath();ctx.arc(w/2,sy,R,0,7);
+  [[.12,.05],[.36,.08],[.6,.11],[.84,.15]].forEach(([dy,th],i)=>ctx.rect(w/2-R*1.2,sy+R*dy+Math.sin(t*2+i)*R*.02,R*2.4,R*th));
+  ctx.fillStyle=lin(0,sy-R,0,sy+R,[c("sun",sa),c("ember",sa),c("rose",sa)]);ctx.fill("evenodd");ctx.restore();
+  ctx.fillStyle=lin(0,hz-30,0,hz+30,[c("ember",0),c("ember",.22*sa),c("ember",0)]);ctx.fillRect(0,hz-30,w,60);ctx.fillStyle=c("sun",.7*sa);ctx.fillRect(0,hz-.75,w,1.5)}
+ const half=w/2*close;
+ if(half>.5&&veil>0){const sway=6+18*Math.sin(Math.PI*Math.min(close,1-close)*2);
+  const wave=(y,ph)=>sway*(.25+.75*y/h)*(.6*Math.sin(y/60+t*5+ph)+.4*Math.sin(y/25-t*3.3+ph*2));
+  for(const left of[true,false]){const ph=left?0:1.7,ex=y=>left?half+wave(y,ph):w-half-wave(y,ph),out=left?-60:w+60;
+   const edge=new Path2D();for(let y=0;y<=h+6;y+=6)y?edge.lineTo(ex(Math.min(y,h)),Math.min(y,h)):edge.moveTo(ex(0),0);
+   const cloth=new Path2D(edge);cloth.lineTo(out,h);cloth.lineTo(out,0);cloth.closePath();
+   ctx.fillStyle=lin(0,0,0,h,[c("night",.88*veil),c("indigo",.8*veil),c("rose",.72*veil)]);ctx.fill(cloth);
+   ctx.save();ctx.clip(cloth);const n=9,pl=half/n;ctx.strokeStyle=`rgba(0,0,0,${.2*veil})`;ctx.lineWidth=Math.max(pl*.45,2);
+   for(let i=0;i<n;i++){const f=i/n;ctx.beginPath();for(let y=0;y<=h;y+=8){const px=left?pl*i+wave(y,ph)*f:w-pl*i-wave(y,ph)*f;y?ctx.lineTo(px,y):ctx.moveTo(px,y)}ctx.stroke()}
+   if(stars>0)for(let i=0;i<50;i++){const u=rnd(i,left?1:2),v=rnd(i,3),y=v*v*h*.62,px=left?u*half+wave(y,ph)*u:w-u*half-wave(y,ph)*u,
+    a=stars*veil*(.55+.45*Math.sin(t*(3+rnd(i,4)*4)+i))*(.5+.5*rnd(i,5)),r=.6+1.3*rnd(i,6);ctx.fillStyle=`rgba(255,255,255,${a})`;ctx.beginPath();ctx.arc(px,y,r,0,7);ctx.fill()}
+   ctx.restore();
+   [[30,c("ember",.16*veil)],[9,c("ember",.3*veil)],[1.6,c("sun",.85*veil)]].forEach(([lw,col])=>{ctx.lineWidth=lw;ctx.strokeStyle=col;ctx.stroke(edge)})}}
+ if(flare>0){const fw=150*flare;ctx.fillStyle=lin(w/2-fw,0,w/2+fw,0,[c("ember",0),c("ember",.45*flare),c("sun",.7*flare),c("ember",.45*flare),c("ember",0)]);ctx.fillRect(w/2-fw,0,fw*2,h)}
+ if(embers>0&&embers<1)for(let i=0;i<70;i++){const life=seg(embers,rnd(i,8)*.35,1);if(life<=0||life>=1)continue;
+  const px=w/2+(rnd(i,9)-.5)*w*(.15+.85*rnd(i,10))+Math.sin(t*2+i)*14*life,py=h*(.35+.65*rnd(i,11))-life*h*(.25+.3*rnd(i,12)),r=1+2.2*rnd(i,13)*(1-life),a=Math.sin(Math.PI*life);
+  const g=ctx.createRadialGradient(px,py,0,px,py,r*4);g.addColorStop(0,c("ember",.35*a));g.addColorStop(1,c("ember",0));ctx.fillStyle=g;ctx.fillRect(px-r*4,py-r*4,r*8,r*8);ctx.fillStyle=c("sun",.9*a);ctx.beginPath();ctx.arc(px,py,r,0,7);ctx.fill()}
+ if(bloom>0){const g=ctx.createRadialGradient(w/2,hz-R,0,w/2,hz-R,Math.max(w,h)*.7);g.addColorStop(0,c("sun",.35*bloom));g.addColorStop(.5,c("ember",.12*bloom));g.addColorStop(1,c("ember",0));ctx.fillStyle=g;ctx.fillRect(0,0,w,h)}
+ if(x<1)raf=requestAnimationFrame(frame);else ctx.clearRect(0,0,w,h)}
+function play(next){if(next===on)return;on=next;bOn.setAttribute("aria-pressed",on);bOff.setAttribute("aria-pressed",!on);warm.style.opacity=on?.55:0;
+ cancelAnimationFrame(raf);if(still)return;size();start=performance.now();raf=requestAnimationFrame(frame)}
+bOn.onclick=()=>play(true);bOff.onclick=()=>play(false);addEventListener("resize",()=>{if(raf)size()});
+let seen=false;new IntersectionObserver(e=>{if(e[0].isIntersecting&&!seen){seen=true;setTimeout(()=>play(true),400)}},{threshold:.6}).observe(scr);
 })();
 </script>
 </body>
