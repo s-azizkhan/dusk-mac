@@ -27,7 +27,7 @@ Dusk is a free, open-source macOS menu-bar app and an alternative to f.lux, Nigh
 - Blue light filter from 6500K down to 500K (Night Shift stops near 2700K, f.lux at 1200K)
 - Seven presets: Energy, Daylight, Evening, Night, Late, Deep, Midnight
 - Dimming to 5%, below the lowest key brightness
-- Flicker-free mode: backlight held at 100%, dimming done in software (stops PWM pulsing)
+- Flicker-free mode (on by default): backlight held at 100%, dimming done in software (stops PWM pulsing)
 - Turns off temporal dithering on Apple silicon (M1 to M4)
 - Night schedule, launch at login, re-applies after sleep
 
@@ -92,10 +92,10 @@ Prices and features of other apps are from their public websites as of November 
 Yes. Dusk is free and open source (MIT), with a 500K filter, extra dimming, flicker-free mode and anti-dithering.
 
 ### How do I reduce PWM flicker on a MacBook?
-Turn on Flicker-free in Dusk. The backlight stays at 100% and Dusk dims in software, so it doesn't pulse.
+Flicker-free is on by default in Dusk. The backlight stays at 100% and Dusk dims in software, so it doesn't pulse.
 
 ### How do I disable temporal dithering on an Apple silicon Mac?
-Open Display health in Dusk and turn on No dithering. `ioreg -lw0 | grep -i enableDither` should then show `No`.
+No dithering is on by default in Dusk (Display health). `ioreg -lw0 | grep -i enableDither` should then show `No`.
 
 ### How is Dusk different from Night Shift?
 Night Shift stops near 2700K and can't dim further or fix flicker. Dusk goes to 500K, dims to 5% and has flicker-free and anti-dithering modes.

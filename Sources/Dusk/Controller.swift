@@ -34,7 +34,13 @@ final class Controller: ObservableObject {
     }
 
     init() {
-        d.register(defaults: ["enabled": true, "kelvin": 3400.0, "brightness": 1.0, "startHour": 20, "endHour": 7])
+        // First run with flicker-free: start the software dim at the current backlight so the screen doesn't jump brighter.
+        if d.object(forKey: "brightness") == nil, d.object(forKey: "flickerFree") as? Bool ?? true,
+           let id = Display.builtin, let b = Backlight.get(id) {
+            d.set(max(Double(b), 0.05), forKey: "brightness")
+        }
+        d.register(defaults: ["enabled": true, "kelvin": 3400.0, "brightness": 1.0, "startHour": 20, "endHour": 7,
+                              "flickerFree": true, "antiDither": true])
         enabled = d.bool(forKey: "enabled")
         kelvin = d.double(forKey: "kelvin")
         brightness = d.double(forKey: "brightness")
