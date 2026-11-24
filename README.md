@@ -13,18 +13,28 @@ Free, open-source macOS menu-bar app that warms your screen down to 500K, dims b
 
 ---
 
-Dusk is a free and open-source alternative to f.lux, Apple Night Shift, Sundown, Iris and GammaDimmer. It runs fully on your Mac: no account, no analytics, no network calls.
+Dusk is a free, open-source alternative to f.lux, Apple Night Shift, Sundown, Iris and GammaDimmer. Everything runs on your Mac. There's no account, no analytics and no network calls.
+
+Used every night by its maker ([Aziz](https://justaziz.com?utm_source=dusk-github)).
+
+## Why I made Dusk
+
+I'm a night person, and I have been for a long time. The quiet hours are when I do my best work and when I go exploring.
+
+The trouble was the screen. After a few hours of staring at bright white pixels, my eyes would give up long before I wanted to. I wanted something warmer than Night Shift, and I didn't want to pay a subscription for it.
+
+So I built the app I wanted. It makes the screen properly warm, dims it past the usual limit and stops the backlight from flickering. I use it every night. If you're up late too, I hope it makes those hours a bit easier on you.
 
 ## Features
 
-- **Blue light filter:** colour temperature from 6500K (daylight) down to 500K (deep red), warmer than Night Shift (~2700K) or f.lux (1200K).
-- **7 warmth presets:** Energy, Daylight, Evening, Night, Late, Deep, Midnight.
-- **Screen dimming below minimum brightness:** software dimming to 5%, for dark rooms and late nights.
-- **Flicker-free mode (PWM):** holds the built-in backlight at 100% and dims through the gamma table instead, so the backlight is not pulsed at low brightness.
-- **Disable temporal dithering:** turns off GPU/DCP dithering on Apple silicon Macs (M1, M2, M3, M4).
-- **Night schedule:** warms automatically between the hours you pick.
-- **Launch at login**, menu-bar only, re-applies after sleep and display changes.
-- **Private by design:** no account, no telemetry, no internet access needed.
+- A blue light filter that goes from 6500K (daylight) down to 500K (deep red). Night Shift stops around 2700K and f.lux at 1200K.
+- Seven warmth presets: Energy, Daylight, Evening, Night, Late, Deep and Midnight.
+- Software dimming down to 5%, below the lowest brightness your keys allow.
+- Flicker-free mode for PWM screens. It holds the built-in backlight at 100% and dims through the gamma table, so the backlight doesn't pulse at low brightness.
+- A switch that turns off GPU/DCP temporal dithering on Apple silicon Macs (M1, M2, M3, M4).
+- A night schedule that warms the screen between the hours you pick.
+- It lives in the menu bar, can launch at login, and re-applies itself after sleep or a display change.
+- No account, no telemetry, and it never needs the internet.
 
 ## Download and install
 

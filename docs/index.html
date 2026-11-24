@@ -104,6 +104,18 @@ nav .wrap{display:flex;align-items:center;justify-content:space-between;height:6
 .stagger>*{animation:rise 1.1s var(--ease) both}
 .stagger>*:nth-child(2){animation-delay:.12s}.stagger>*:nth-child(3){animation-delay:.24s}.stagger>*:nth-child(4){animation-delay:.36s}.stagger>*:nth-child(5){animation-delay:.48s}
 
+/* maker badge + story */
+.maker{display:inline-flex;align-items:center;gap:8px;margin-top:22px;padding:7px 14px 7px 8px;border-radius:999px;border:1px solid var(--line);background:rgba(255,255,255,.04);font-size:14px;color:var(--muted);text-decoration:none;transition:background .25s,color .25s}
+.maker:hover{background:rgba(255,255,255,.08);color:var(--text)}
+.maker .av{width:24px;height:24px;border-radius:50%;display:grid;place-items:center;background:var(--ember);color:#1a0c22;font:600 12px/1 "Geist",system-ui,sans-serif}
+.story{max-width:680px;margin:0 auto}
+.story h2{text-align:left}
+.story p{color:var(--muted);font-size:19px;line-height:1.7;margin-top:22px}
+.story p.first{color:var(--text);font-family:"Instrument Serif",Georgia,serif;font-size:clamp(26px,3.4vw,34px);line-height:1.3}
+.sign{margin-top:34px;display:flex;align-items:center;gap:14px}
+.sign .av{width:44px;height:44px;border-radius:50%;display:grid;place-items:center;background:linear-gradient(180deg,var(--sun),var(--ember) 60%,var(--rose));color:#1a0c22;font:600 18px/1 "Geist",system-ui,sans-serif}
+.sign b{display:block;font-family:"Instrument Serif",Georgia,serif;font-weight:400;font-size:24px;font-style:italic}
+.sign a{color:var(--muted);font-size:14px}
 /* demo */
 .demo{display:grid;place-items:center;margin-top:64px}
 .monitor{width:min(980px,100%);position:relative}
@@ -240,12 +252,13 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   <div class="wrap stagger" style="position:relative">
     <svg class="mark-hero" aria-hidden="true"><use href="#mark"/></svg>
     <h1 class="display"><span>Warm screen.</span><span class="accent">Calm eyes.</span></h1>
-    <p>Dusk takes the harsh blue light and the hidden flicker out of your Mac. Free, open source, and it never phones home.</p>
+    <p>Dusk takes the harsh blue light and the hidden flicker out of your Mac's screen. It's free, the code is open, and it never phones home.</p>
     <div class="cta-row">
       <a class="pill" href="https://github.com/s-azizkhan/dusk-mac/releases/latest"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Download for Mac</a>
       <a class="ghost" href="https://github.com/s-azizkhan/dusk-mac">View source</a>
     </div>
     <div class="meta">Free forever · MIT licensed · macOS 14+ · Apple silicon &amp; Intel</div>
+    <a class="maker" href="https://justaziz.com?utm_source=dusk-website"><span class="av">A</span>Used every night by its maker</a>
   </div>
   <div class="scrollcue" aria-hidden="true">Scroll</div>
 </header>
@@ -293,18 +306,18 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 
 <section id="why">
   <div class="wrap">
-    <h2 class="display rv">Your screen wasn't made <span class="accent">for midnight.</span></h2>
-    <p class="intro rv d1">A bright white screen after dark is harsh. Dusk makes the evening screen feel like evening.</p>
+    <h2 class="display rv">Screens are made <span class="accent">for daytime.</span></h2>
+    <p class="intro rv d1">After dark, a bright white screen is just harsh. Dusk makes your screen look like it knows what time it is.</p>
     <div class="grid3">
       <div class="card rv d1"><div class="glow" style="background:#c2410c"></div>
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-        <h3>Easier on the eyes</h3><p>Less glare and no backlight pulsing when you dim. A steady, warm screen for long evenings.</p></div>
+        <h3>Easier on the eyes</h3><p>Less glare, and the backlight stops pulsing when you dim. You get a steady, warm screen for long evenings.</p></div>
       <div class="card rv d2"><div class="glow" style="background:#9f1239"></div>
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
         <h3>Wind down naturally</h3><p>Warm the screen as the sun goes down so late work feels less like noon.</p></div>
       <div class="card rv d3"><div class="glow" style="background:#5b21b6"></div>
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
-        <h3>Set it and forget it</h3><p>Pick your hours once. Dusk warms up at night and steps aside in the morning.</p></div>
+        <h3>Pick your hours once</h3><p>Dusk warms up at night and gets out of the way in the morning.</p></div>
     </div>
   </div>
 </section>
@@ -312,7 +325,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 <section id="kelvin">
   <div class="wrap">
     <h2 class="display rv">Night Shift stops at 2700K.<br><span class="accent">Dusk goes to 500K.</span></h2>
-    <p class="intro rv d1">Most filters only tint the screen a little. Dusk can take out almost all the blue.</p>
+    <p class="intro rv d1">Most filters only tint the screen a little. Dusk can take out nearly all of the blue.</p>
     <div class="scale rv d2" id="scale">
       <div class="scale-l"><span>Warmer</span><span>Cooler</span></div>
       <div class="bar"></div>
@@ -343,11 +356,11 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 
 <section id="features">
   <div class="wrap">
-    <h2 class="display rv">Everything you need. <span class="accent">Nothing you don't.</span></h2>
+    <h2 class="display rv">A small app with <span class="accent">a few good tricks.</span></h2>
     <div class="grid3">
       <div class="card rv"><div class="glow" style="background:#b91c1c"></div><h3>Blue light filter</h3><p>From 6500K daylight down to a deep 500K red.</p></div>
       <div class="card rv d1"><div class="glow" style="background:#c2410c"></div><h3>Flicker-free mode</h3><p>Backlight held at 100%, brightness lowered in software.</p></div>
-      <div class="card rv d2"><div class="glow" style="background:#a16207"></div><h3>No dithering</h3><p>Turns off temporal dithering on Apple silicon for a still, calm image.</p></div>
+      <div class="card rv d2"><div class="glow" style="background:#a16207"></div><h3>No dithering</h3><p>Turns off temporal dithering on Apple silicon, so the image stops shimmering.</p></div>
       <div class="card rv"><div class="glow" style="background:#9d174d"></div><h3>Dim below minimum</h3><p>Go darker than the brightness keys allow, down to 5%.</p></div>
       <div class="card rv d1"><div class="glow" style="background:#6d28d9"></div><h3>Night schedule</h3><p>Warms on its own during the hours you choose.</p></div>
       <div class="card rv d2"><div class="glow" style="background:#1e40af"></div><h3>Seven presets</h3><p>Energy, Daylight, Evening, Night, Late, Deep and Midnight.</p></div>
@@ -386,13 +399,13 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 
 <section id="open">
   <div class="wrap">
-    <h2 class="display rv">Free. Open. <span class="accent">Private.</span></h2>
-    <p class="intro rv d1">No trial, no account, no tracking. Read every line of the code on GitHub.</p>
+    <h2 class="display rv">Free, and it <span class="accent">stays that way.</span></h2>
+    <p class="intro rv d1">There's no trial and no account, and Dusk doesn't track you. Every line of code is on GitHub if you want to check.</p>
     <div class="stats">
       <div class="stat rv"><b class="count" data-to="0" data-pre="$">$0</b><span>Forever</span></div>
       <div class="stat rv d1"><b class="count" data-to="0">0</b><span>Trackers</span></div>
       <div class="stat rv d2"><b class="count" data-to="500" data-suf="K">500K</b><span>Warmest setting</span></div>
-      <div class="stat rv d3"><b class="count" data-to="100" data-suf="%">100%</b><span>Open source</span></div>
+      <div class="stat rv d3"><b class="count" data-to="5" data-suf="%">5%</b><span>Dimmest setting</span></div>
     </div>
   </div>
 </section>
@@ -412,11 +425,21 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   </div>
 </section>
 
+<section id="story">
+  <div class="wrap story">
+    <span class="eyebrow rv">Why I made Dusk</span>
+    <p class="first rv d1">I'm a night person, and I have been for a long time. The quiet hours are when I do my best work and when I go exploring.</p>
+    <p class="rv d2">The trouble was the screen. After a few hours of staring at bright white pixels, my eyes would give up long before I wanted to. I wanted something warmer than Night Shift, and I didn't want to pay a subscription for it.</p>
+    <p class="rv d3">So I built the app I wanted. It makes the screen properly warm, dims it past the usual limit and stops the backlight from flickering. I use it every night. If you're up late too, I hope it makes those hours a bit easier on you.</p>
+    <div class="sign rv d4"><span class="av">A</span><div><b>Aziz</b><a href="https://justaziz.com?utm_source=dusk-website">justaziz.com</a></div></div>
+  </div>
+</section>
+
 <section class="final" id="get">
   <div class="wrap">
     <div class="sunset rv" aria-hidden="true"><div class="s"></div><div class="h"></div></div>
     <h2 class="display rv d1">Make tonight <span class="accent">easier on your eyes.</span></h2>
-    <p class="intro rv d2">Free download. Takes a minute.</p>
+    <p class="intro rv d2">It's a free download and takes about a minute to set up.</p>
     <div class="cta-row rv d3" style="margin-top:34px"><a class="pill" href="https://github.com/s-azizkhan/dusk-mac/releases/latest">Download for Mac</a><a class="ghost" href="https://github.com/s-azizkhan/dusk-mac">Star on GitHub</a></div>
   </div>
 </section>
