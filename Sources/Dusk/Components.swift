@@ -5,54 +5,10 @@ final class Flag: ObservableObject { @Published var on = false }
 let spring = Animation.spring(response: 0.38, dampingFraction: 0.78)
 
 extension Color {
+    static let ember = Color(red: 1, green: 0.604, blue: 0.302)
     static func warm(_ kelvin: Double) -> Color {
         let c = Display.rgb(kelvin: kelvin)
         return Color(red: c.r, green: c.g, blue: c.b)
-    }
-}
-
-struct Orb: View {
-    let color: Color
-    let on: Bool
-    let level: Double
-    @StateObject private var breatheF = Flag()
-    @StateObject private var spinF = Flag()
-    private var breathe: Bool { breatheF.on }
-    private var spin: Bool { spinF.on }
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .fill(color.opacity(on ? 0.55 * level : 0))
-                .frame(width: 120, height: 120)
-                .blur(radius: 30)
-                .scaleEffect(breathe ? 1.15 : 0.9)
-
-            Circle()
-                .strokeBorder(color.opacity(on ? 0.5 : 0.12), style: StrokeStyle(lineWidth: 1.5, lineCap: .round, dash: [1, 7]))
-                .frame(width: 96, height: 96)
-                .rotationEffect(.degrees(spin ? 360 : 0))
-
-            Circle()
-                .fill(RadialGradient(colors: [.white.opacity(0.95), color, color.opacity(0.65)],
-                                     center: .init(x: 0.3, y: 0.28), startRadius: 2, endRadius: 56))
-                .frame(width: 68, height: 68)
-                .overlay(Circle().strokeBorder(.white.opacity(0.4), lineWidth: 1))
-                .shadow(color: color.opacity(on ? 0.7 : 0), radius: 16)
-                .saturation(on ? 1 : 0)
-                .opacity(on ? 0.45 + 0.55 * level : 0.3)
-                .scaleEffect(on ? 1 : 0.88)
-
-            Image(systemName: on ? "sun.max.fill" : "moon.zzz.fill")
-                .font(.system(size: 20, weight: .semibold))
-                .foregroundStyle(.black.opacity(0.45))
-                .contentTransition(.symbolEffect(.replace))
-        }
-        .frame(height: 124)
-        .onAppear {
-            withAnimation(.easeInOut(duration: 3.4).repeatForever(autoreverses: true)) { breatheF.on = true }
-            withAnimation(.linear(duration: 40).repeatForever(autoreverses: false)) { spinF.on = true }
-        }
     }
 }
 

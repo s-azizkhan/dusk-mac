@@ -24,13 +24,11 @@ struct ContentView: View {
     private var presetName: String {
         Preset.all.first { abs($0.kelvin - c.kelvin) < 1 }?.name ?? "Custom"
     }
-    private var warmGradient: [Color] { [500, 1200, 1900, 2700, 3400, 5000, 6500].map { Color.warm($0) } }
 
     var body: some View {
         VStack(spacing: 16) {
             header
             hero
-            warmth
             brightness
             presets
             Divider().opacity(0.4)
@@ -62,35 +60,9 @@ struct ContentView: View {
     }
 
     private var hero: some View {
-        VStack(spacing: 2) {
-            Orb(color: tint, on: c.enabled, level: c.brightness)
-                .onTapGesture { c.enabled.toggle() }
-                .help("Toggle Dusk")
-            HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text("\(Int(c.kelvin))")
-                    .font(.system(size: 40, weight: .semibold, design: .rounded))
-                    .contentTransition(.numericText(value: c.kelvin))
-                Text("K").font(.system(size: 16, weight: .medium, design: .rounded)).foregroundStyle(.secondary)
-            }
-            .animation(.snappy, value: Int(c.kelvin))
-            Text(c.enabled ? presetName : "Paused")
-                .font(.system(size: 12, weight: .medium))
-                .foregroundStyle(.secondary)
-                .contentTransition(.interpolate)
-        }
-        .opacity(c.enabled ? 1 : 0.6)
-    }
-
-    private var warmth: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            label("Warmth", icon: "thermometer.sun.fill")
-            GlowSlider(value: $c.kelvin, range: 500...6500, colors: warmGradient, tint: tint,
-                       snaps: Preset.all.map(\.kelvin), name: "Warmth",
-                       label: { "\(Int($0))K" },
-                       icon: { $0 < 1500 ? "flame.fill" : $0 < 4000 ? "sun.haze.fill" : "sun.max.fill" },
-                       rays: true)
-        }
-        .disabled(!c.enabled).opacity(c.enabled ? 1 : 0.45)
+        WarmthDial(kelvin: $c.kelvin, enabled: $c.enabled, presetName: presetName)
+            .padding(.vertical, 4)
+            .help("Drag the ring to set warmth. Click the center to turn Dusk on or off.")
     }
 
     private var brightness: some View {
