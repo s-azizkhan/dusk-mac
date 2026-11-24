@@ -28,6 +28,14 @@ Dusk is a free and open-source alternative to f.lux, Apple Night Shift, Sundown,
 
 ## Download and install
 
+### Homebrew
+
+```sh
+brew install --cask s-azizkhan/tap/dusk
+```
+
+### Manual
+
 1. Download `Dusk-macOS.zip` from [the latest release](https://github.com/s-azizkhan/dusk-mac/releases/latest).
 2. Unzip and move `Dusk.app` to Applications.
 3. The build is ad-hoc signed (not notarised yet). Allow it once:

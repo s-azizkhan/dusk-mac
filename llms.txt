@@ -7,7 +7,8 @@
 - Website: https://s-azizkhan.github.io/dusk-mac/
 - Platform: macOS 14 Sonoma or later, Apple silicon and Intel (universal)
 - License: MIT
-- Install: download Dusk-macOS.zip, move Dusk.app to Applications, run `xattr -dr com.apple.quarantine /Applications/Dusk.app`, open it.
+- Install (Homebrew): `brew install --cask s-azizkhan/tap/dusk`
+- Install (manual): download Dusk-macOS.zip, move Dusk.app to Applications, run `xattr -dr com.apple.quarantine /Applications/Dusk.app`, open it.
 
 ## Features
 - Colour temperature 500K-6500K, 7 presets (Energy 6000K, Daylight 5000K, Evening 3400K, Night 2700K, Late 1900K, Deep 1200K, Midnight 500K)
