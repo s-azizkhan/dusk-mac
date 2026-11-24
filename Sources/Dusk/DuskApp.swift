@@ -63,8 +63,14 @@ struct ContentView: View {
         .background(Color(red: 0.11, green: 0.102, blue: 0.141).opacity(0.94))
         .background(RoundedWindow(radius: 20))
         .environment(\.colorScheme, .dark)
+        .overlay {
+            if let s = c.sweepStart {
+                SweepView(start: s, on: c.enabled)
+                    .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+            }
+        }
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.08), lineWidth: 1).allowsHitTesting(false))
-        .animation(spring, value: c.enabled)
+        .animation(.easeInOut(duration: SweepView.duration), value: c.enabled)
         .animation(.spring(response: 0.42, dampingFraction: 0.86), value: settings)
         .animation(spring, value: c.scheduleOn)
         .animation(spring, value: c.gammaOK)

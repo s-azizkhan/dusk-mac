@@ -6,6 +6,10 @@ let spring = Animation.spring(response: 0.38, dampingFraction: 0.78)
 
 extension Color {
     static let ember = Color(red: 1, green: 0.604, blue: 0.302)
+    static let rose = Color(red: 0.949, green: 0.314, blue: 0.482)
+    static let sun = Color(red: 1, green: 0.878, blue: 0.541)
+    static let night = Color(red: 0.055, green: 0.039, blue: 0.165)
+    static let indigo = Color(red: 0.165, green: 0.114, blue: 0.4)
     static func warm(_ kelvin: Double) -> Color {
         let c = Display.rgb(kelvin: kelvin)
         return Color(red: c.r, green: c.g, blue: c.b)

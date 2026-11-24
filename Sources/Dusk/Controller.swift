@@ -19,7 +19,19 @@ final class Controller: ObservableObject {
     private var savedBacklight: Float?
     private var timer: Timer?
 
-    @Published var enabled: Bool { didSet { d.set(enabled, forKey: "enabled"); apply() } }
+    @Published var enabled: Bool {
+        didSet {
+            d.set(enabled, forKey: "enabled")
+            apply()
+            let start = Date()
+            sweepStart = start
+            ScreenSweep.play(on: enabled)
+            DispatchQueue.main.asyncAfter(deadline: .now() + SweepView.duration) { [weak self] in
+                if self?.sweepStart == start { self?.sweepStart = nil }
+            }
+        }
+    }
+    @Published var sweepStart: Date?
     @Published var kelvin: Double { didSet { d.set(kelvin, forKey: "kelvin"); apply() } }
     @Published var brightness: Double { didSet { d.set(brightness, forKey: "brightness"); apply() } }
     @Published var flickerFree: Bool { didSet { d.set(flickerFree, forKey: "flickerFree"); apply() } }
@@ -68,23 +80,55 @@ final class Controller: ObservableObject {
         return startHour <= endHour ? (h >= startHour && h < endHour) : (h >= startHour || h < endHour)
     }
 
+    private var shown = (k: 6500.0, dim: 1.0) // what the gamma table shows right now
+    private var wasActive = false
+    private var anim: Timer?
+
     func apply() {
         let active = enabled && (!scheduleOn || inNight)
-        let k = active ? kelvin : 6500
-        let dim = active ? brightness : 1
-        gammaOK = Display.applyGamma(kelvin: k, dim: dim)
-        // Pin backlight only if gamma verifiably applied, else pinning would brighten the screen.
-        guard let id = Display.builtin else { return }
-        if flickerFree && active && gammaOK {
-            if savedBacklight == nil { savedBacklight = Backlight.get(id) }
+        let animate = active != wasActive || anim != nil
+        wasActive = active
+        anim?.invalidate(); anim = nil
+        let id = Display.builtin
+        let pin = flickerFree && active
+        // Flicker-free: hand the backlight's level over to gamma first, so pinning to 100% looks the same.
+        if pin, let id, savedBacklight == nil, let b = Backlight.get(id),
+           Display.applyGamma(kelvin: shown.k, dim: shown.dim * Double(b)) {
+            savedBacklight = b
             Backlight.set(id, 1)
-        } else if let s = savedBacklight {
-            Backlight.set(id, s)
-            savedBacklight = nil
+            shown.dim *= Double(b)
+        }
+        let unpin = !pin && savedBacklight != nil
+        let target = active ? (k: kelvin, dim: brightness) : (k: 6500.0, dim: unpin ? Double(savedBacklight!) : 1)
+
+        let finish = { [self] in
+            gammaOK = Display.applyGamma(kelvin: target.k, dim: target.dim)
+            shown = target
+            // Unpin, or gamma didn't take: give the backlight back, else the screen would be brighter.
+            if let id, let s = savedBacklight, unpin || !gammaOK {
+                Backlight.set(id, s)
+                savedBacklight = nil
+                if active { gammaOK = Display.applyGamma(kelvin: target.k, dim: target.dim) }
+                else { Display.resetGamma(); shown = (6500, 1) }
+            }
+        }
+        guard animate else { return finish() }
+
+        // Sunset on, sunrise off: ease warmth (in mireds, so it looks even) and dim with the curtain.
+        let from = shown, start = Date(), dur = SweepView.duration
+        anim = Timer.scheduledTimer(withTimeInterval: 1.0 / 60, repeats: true) { [weak self] t in
+            guard let self else { return t.invalidate() }
+            let x = min(Date().timeIntervalSince(start) / dur, 1)
+            if x >= 1 { t.invalidate(); self.anim = nil; return finish() }
+            let e = x < 0.5 ? 4 * x * x * x : 1 - pow(-2 * x + 2, 3) / 2
+            let m = 1e6 / from.k + (1e6 / target.k - 1e6 / from.k) * e
+            self.shown = (1e6 / m, from.dim + (target.dim - from.dim) * e)
+            _ = Display.applyGamma(kelvin: self.shown.k, dim: self.shown.dim)
         }
     }
 
     func shutdown() {
+        anim?.invalidate()
         if let id = Display.builtin, let s = savedBacklight { Backlight.set(id, s) }
         Display.resetGamma()
     }
