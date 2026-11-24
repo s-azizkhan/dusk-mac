@@ -40,6 +40,8 @@ struct ContentView: View {
         .padding(18)
         .frame(width: 320)
         .font(.geist(13))
+        .background(RoundedWindow(radius: 20))
+        .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.08), lineWidth: 1).allowsHitTesting(false))
         .background(alignment: .top) {
             LinearGradient(colors: [tint.opacity(c.enabled ? 0.24 : 0.04), .clear], startPoint: .top, endPoint: .center)
                 .allowsHitTesting(false)
@@ -80,15 +82,12 @@ struct ContentView: View {
     }
 
     private var presets: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 6) {
-                ForEach(Preset.all) { p in
-                    Chip(preset: p, selected: abs(p.kelvin - c.kelvin) < 1, ns: ns) {
-                        withAnimation(spring) { c.kelvin = p.kelvin }
-                    }
+        FlowLayout(spacing: 6) {
+            ForEach(Preset.all) { p in
+                Chip(preset: p, selected: abs(p.kelvin - c.kelvin) < 1, ns: ns) {
+                    withAnimation(spring) { c.kelvin = p.kelvin }
                 }
             }
-            .padding(.horizontal, 1).padding(.vertical, 2)
         }
         .disabled(!c.enabled).opacity(c.enabled ? 1 : 0.45)
     }

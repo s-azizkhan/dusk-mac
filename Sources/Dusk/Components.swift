@@ -243,3 +243,69 @@ struct BrightnessBars: View {
         value = Double(k + 1) / Double(n)
     }
 }
+
+/// Makes the MenuBarExtra window transparent with continuous rounded corners.
+struct RoundedWindow: NSViewRepresentable {
+    var radius: CGFloat
+    func makeNSView(context: Context) -> NSView { Probe(radius: radius) }
+    func updateNSView(_ nsView: NSView, context: Context) {}
+
+    final class Probe: NSView {
+        let radius: CGFloat
+        init(radius: CGFloat) { self.radius = radius; super.init(frame: .zero) }
+        required init?(coder: NSCoder) { fatalError() }
+        override func viewDidMoveToWindow() {
+            super.viewDidMoveToWindow()
+            guard let w = window, let cv = w.contentView else { return }
+            w.isOpaque = false
+            w.backgroundColor = .clear
+            for v in [cv, cv.superview].compactMap({ $0 }) {
+                v.wantsLayer = true
+                v.layer?.cornerRadius = radius
+                v.layer?.cornerCurve = .continuous
+                v.layer?.masksToBounds = true
+            }
+            w.invalidateShadow()
+        }
+    }
+}
+
+/// Wraps children into centered rows.
+struct FlowLayout: Layout {
+    var spacing: CGFloat = 6
+
+    func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) -> CGSize {
+        let rows = rows(subviews, width: proposal.width ?? .infinity)
+        let h = rows.map { $0.h }.reduce(0, +) + spacing * CGFloat(max(rows.count - 1, 0))
+        return CGSize(width: proposal.width ?? rows.map { $0.w }.max() ?? 0, height: h)
+    }
+
+    func placeSubviews(in b: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
+        var y = b.minY
+        for r in rows(subviews, width: b.width) {
+            var x = b.minX + (b.width - r.w) / 2
+            for i in r.items {
+                let s = subviews[i].sizeThatFits(.unspecified)
+                subviews[i].place(at: CGPoint(x: x, y: y), proposal: ProposedViewSize(s))
+                x += s.width + spacing
+            }
+            y += r.h + spacing
+        }
+    }
+
+    private func rows(_ subviews: Subviews, width: CGFloat) -> [(items: [Int], w: CGFloat, h: CGFloat)] {
+        var out: [(items: [Int], w: CGFloat, h: CGFloat)] = []
+        var cur: [Int] = [], w: CGFloat = 0, h: CGFloat = 0
+        for i in subviews.indices {
+            let s = subviews[i].sizeThatFits(.unspecified)
+            if !cur.isEmpty && w + spacing + s.width > width {
+                out.append((cur, w, h)); cur = []; w = 0; h = 0
+            }
+            w += (cur.isEmpty ? 0 : spacing) + s.width
+            h = max(h, s.height)
+            cur.append(i)
+        }
+        if !cur.isEmpty { out.append((cur, w, h)) }
+        return out
+    }
+}

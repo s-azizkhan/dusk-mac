@@ -41,6 +41,7 @@
     {
       "@type": "FAQPage",
       "mainEntity": [
+        {"@type": "Question", "name": "What is Dusk?", "acceptedAnswer": {"@type": "Answer", "text": "Dusk is a free, open-source macOS menu-bar app. It filters blue light from 6500K down to 500K, dims below minimum brightness, reduces PWM flicker and turns off temporal dithering on Apple silicon."}},
         {"@type": "Question", "name": "Is there a free alternative to f.lux or Sundown for Mac?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. Dusk is free and open source (MIT). It has a blue light filter down to 500K, dimming below minimum brightness, a PWM flicker-free mode and a switch to disable temporal dithering."}},
         {"@type": "Question", "name": "How do I reduce PWM flicker on a MacBook?", "acceptedAnswer": {"@type": "Answer", "text": "Turn on Flicker-free in Dusk. It holds the built-in backlight at 100% and lowers brightness in software through the gamma table, so the backlight is not pulsed."}},
         {"@type": "Question", "name": "How do I disable temporal dithering on Apple silicon?", "acceptedAnswer": {"@type": "Answer", "text": "In Dusk, open Display health and turn on No dithering. It sets enableDither to false on IOMobileFramebufferAP. Check with: ioreg -lw0 | grep -i enableDither."}},
@@ -252,7 +253,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   <div class="wrap stagger" style="position:relative">
     <svg class="mark-hero" aria-hidden="true"><use href="#mark"/></svg>
     <h1 class="display"><span>Warm screen.</span><span class="accent">Calm eyes.</span></h1>
-    <p>Dusk takes the harsh blue light and the hidden flicker out of your Mac's screen. It's free, the code is open, and it never phones home.</p>
+    <p>Dusk is a free, open-source Mac app that filters blue light down to 500K, dims below minimum brightness and removes PWM flicker.</p>
     <div class="cta-row">
       <a class="pill" href="https://github.com/s-azizkhan/dusk-mac/releases/latest"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 3v12m0 0-5-5m5 5 5-5M4 21h16" stroke="currentColor" stroke-width="2.2" fill="none" stroke-linecap="round" stroke-linejoin="round"/></svg>Download for Mac</a>
       <a class="ghost" href="https://github.com/s-azizkhan/dusk-mac">View source</a>
@@ -260,15 +261,23 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
     <div class="meta">Free forever · MIT licensed · macOS 14+ · Apple silicon &amp; Intel</div>
     <a class="maker" href="https://justaziz.com?utm_source=dusk-website"><span class="av">A</span>Used every night by its maker</a>
   </div>
-  <div class="scrollcue" aria-hidden="true">Scroll</div>
 </header>
 
 <main>
+<section id="story" style="padding-top:40px">
+  <div class="wrap story">
+    <h2 class="display rv">Why I made <span class="accent">Dusk.</span></h2>
+    <p class="first rv d1">I'm a night person. Late hours are when I work and explore best, but hours of staring at a bright screen wore my eyes out.</p>
+    <p class="rv d2">So I built Dusk: a free app that warms the screen, dims it past the usual limit and stops backlight flicker. I use it every night.</p>
+    <div class="sign rv d3"><span class="av">A</span><div><b>Aziz</b><a href="https://justaziz.com?utm_source=dusk-website">justaziz.com</a></div></div>
+  </div>
+</section>
+
 <section id="demo">
   <div class="wrap">
     <div style="text-align:center"><span class="eyebrow rv">Try it right here</span></div>
     <h2 class="display rv">Bring the sunset <span class="accent">to your screen.</span></h2>
-    <p class="intro rv d1">Drag the slider. This is how Dusk changes your whole display, from daylight white to deep 500K red.</p>
+    <p class="intro rv d1">Drag the slider to see how Dusk warms your whole display, from 6500K white to 500K red.</p>
     <div class="demo rv d2">
       <div class="monitor">
         <div class="screen">
@@ -307,14 +316,14 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 <section id="why">
   <div class="wrap">
     <h2 class="display rv">Screens are made <span class="accent">for daytime.</span></h2>
-    <p class="intro rv d1">After dark, a bright white screen is just harsh. Dusk makes your screen look like it knows what time it is.</p>
+    <p class="intro rv d1">Bright white light is harsh at night. Dusk fixes that.</p>
     <div class="grid3">
       <div class="card rv d1"><div class="glow" style="background:#c2410c"></div>
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z"/><circle cx="12" cy="12" r="3"/></svg>
-        <h3>Easier on the eyes</h3><p>Less glare, and the backlight stops pulsing when you dim. You get a steady, warm screen for long evenings.</p></div>
+        <h3>Easier on the eyes</h3><p>Less glare and no backlight pulsing. A steady, warm screen all evening.</p></div>
       <div class="card rv d2"><div class="glow" style="background:#9f1239"></div>
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5Z"/></svg>
-        <h3>Wind down naturally</h3><p>Warm the screen as the sun goes down so late work feels less like noon.</p></div>
+        <h3>Wind down naturally</h3><p>A warmer screen after sunset, so late work feels less like noon.</p></div>
       <div class="card rv d3"><div class="glow" style="background:#5b21b6"></div>
         <svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>
         <h3>Pick your hours once</h3><p>Dusk warms up at night and gets out of the way in the morning.</p></div>
@@ -325,7 +334,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 <section id="kelvin">
   <div class="wrap">
     <h2 class="display rv">Night Shift stops at 2700K.<br><span class="accent">Dusk goes to 500K.</span></h2>
-    <p class="intro rv d1">Most filters only tint the screen a little. Dusk can take out nearly all of the blue.</p>
+    <p class="intro rv d1">Most filters stop at a light tint. Dusk removes nearly all blue light.</p>
     <div class="scale rv d2" id="scale">
       <div class="scale-l"><span>Warmer</span><span>Cooler</span></div>
       <div class="bar"></div>
@@ -341,8 +350,8 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 
 <section id="flicker">
   <div class="wrap">
-    <h2 class="display rv">The flicker <span class="accent">you can't see.</span></h2>
-    <p class="intro rv d1">Many MacBooks dim by switching the backlight on and off very fast (PWM). Dusk can hold the backlight at full power and dim in software instead.</p>
+    <h2 class="display rv">Flicker-free dimming <span class="accent">for MacBooks.</span></h2>
+    <p class="intro rv d1">Many MacBooks dim with PWM, switching the backlight on and off very fast. Dusk keeps the backlight at full power and dims in software.</p>
     <div class="flick rv d2">
       <div class="seg" role="tablist"><button class="on" data-m="pwm" role="tab">Normal dimming</button><button data-m="flat" role="tab">Dusk flicker-free</button></div>
       <svg class="wave" viewBox="0 0 800 150" preserveAspectRatio="none" aria-label="Backlight output over time">
@@ -356,7 +365,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 
 <section id="features">
   <div class="wrap">
-    <h2 class="display rv">A small app with <span class="accent">a few good tricks.</span></h2>
+    <h2 class="display rv">What Dusk <span class="accent">does.</span></h2>
     <div class="grid3">
       <div class="card rv"><div class="glow" style="background:#b91c1c"></div><h3>Blue light filter</h3><p>From 6500K daylight down to a deep 500K red.</p></div>
       <div class="card rv d1"><div class="glow" style="background:#c2410c"></div><h3>Flicker-free mode</h3><p>Backlight held at 100%, brightness lowered in software.</p></div>
@@ -382,7 +391,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 
 <section id="compare">
   <div class="wrap">
-    <h2 class="display rv">How Dusk <span class="accent">compares.</span></h2>
+    <h2 class="display rv">Dusk vs Night Shift <span class="accent">vs f.lux vs Sundown.</span></h2>
     <div class="tablewrap rv d1"><table>
       <tr><th>Feature</th><th class="us">Dusk</th><th>Night Shift</th><th>f.lux</th><th>Sundown</th></tr>
       <tr><td>Price</td><td class="us">Free</td><td>Free</td><td>Free</td><td>$4.99/mo, $39/yr, $79 lifetime</td></tr>
@@ -400,7 +409,7 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 <section id="open">
   <div class="wrap">
     <h2 class="display rv">Free, and it <span class="accent">stays that way.</span></h2>
-    <p class="intro rv d1">There's no trial and no account, and Dusk doesn't track you. Every line of code is on GitHub if you want to check.</p>
+    <p class="intro rv d1">No trial, no account, no tracking. The code is on GitHub.</p>
     <div class="stats">
       <div class="stat rv"><b class="count" data-to="0" data-pre="$">$0</b><span>Forever</span></div>
       <div class="stat rv d1"><b class="count" data-to="0">0</b><span>Trackers</span></div>
@@ -412,8 +421,9 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
 
 <section id="faq">
   <div class="wrap">
-    <h2 class="display rv">Questions</h2>
+    <h2 class="display rv">FAQ</h2>
     <div class="faq rv d1">
+      <details><summary>What is Dusk?</summary><p>A free, open-source macOS menu-bar app. It filters blue light (500K to 6500K), dims below minimum brightness, reduces PWM flicker and turns off temporal dithering.</p></details>
       <details><summary>Is there a free alternative to f.lux or Sundown for Mac?</summary><p>Yes. Dusk is free and open source (MIT), with a 500K blue light filter, dimming below minimum brightness, flicker-free mode and anti-dithering.</p></details>
       <details><summary>How do I reduce PWM flicker on a MacBook?</summary><p>Turn on Flicker-free in Dusk. The backlight stays at 100% and brightness is lowered in software through the gamma table.</p></details>
       <details><summary>How do I disable temporal dithering on Apple silicon?</summary><p>Open Display Health in Dusk and turn on No Dithering. Check it with <code>ioreg -lw0 | grep -i enableDither</code>.</p></details>
@@ -425,21 +435,11 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   </div>
 </section>
 
-<section id="story">
-  <div class="wrap story">
-    <span class="eyebrow rv">Why I made Dusk</span>
-    <p class="first rv d1">I'm a night person, and I have been for a long time. The quiet hours are when I do my best work and when I go exploring.</p>
-    <p class="rv d2">The trouble was the screen. After a few hours of staring at bright white pixels, my eyes would give up long before I wanted to. I wanted something warmer than Night Shift, and I didn't want to pay a subscription for it.</p>
-    <p class="rv d3">So I built the app I wanted. It makes the screen properly warm, dims it past the usual limit and stops the backlight from flickering. I use it every night. If you're up late too, I hope it makes those hours a bit easier on you.</p>
-    <div class="sign rv d4"><span class="av">A</span><div><b>Aziz</b><a href="https://justaziz.com?utm_source=dusk-website">justaziz.com</a></div></div>
-  </div>
-</section>
-
 <section class="final" id="get">
   <div class="wrap">
     <div class="sunset rv" aria-hidden="true"><div class="s"></div><div class="h"></div></div>
     <h2 class="display rv d1">Make tonight <span class="accent">easier on your eyes.</span></h2>
-    <p class="intro rv d2">It's a free download and takes about a minute to set up.</p>
+    <p class="intro rv d2">Free download. One-minute setup.</p>
     <div class="cta-row rv d3" style="margin-top:34px"><a class="pill" href="https://github.com/s-azizkhan/dusk-mac/releases/latest">Download for Mac</a><a class="ghost" href="https://github.com/s-azizkhan/dusk-mac">Star on GitHub</a></div>
   </div>
 </section>
