@@ -47,6 +47,9 @@ struct ContentView: View {
         .animation(spring, value: more)
         .animation(spring, value: c.scheduleOn)
         .animation(spring, value: c.gammaOK)
+        .onChange(of: c.launchAtLogin) { haptic(.levelChange) }
+        .onChange(of: c.startHour) { haptic() }
+        .onChange(of: c.endHour) { haptic() }
     }
 
     private var header: some View {
@@ -99,7 +102,7 @@ struct ContentView: View {
 
     private var advanced: some View {
         VStack(spacing: 10) {
-            Button { moreF.on.toggle() } label: {
+            Button { haptic(.generic); moreF.on.toggle() } label: {
                 HStack {
                     Text("Display health").font(.geist(12, .semibold)).foregroundStyle(.secondary)
                     Spacer()
@@ -139,7 +142,7 @@ struct ContentView: View {
         HStack {
             Toggle("Launch at login", isOn: $c.launchAtLogin).toggleStyle(.checkbox).font(.geist(11))
             Spacer()
-            Button("Quit") { c.shutdown(); NSApp.terminate(nil) }
+            Button("Quit") { haptic(.generic); c.shutdown(); NSApp.terminate(nil) }
                 .buttonStyle(.plain).font(.geist(11, .medium)).foregroundStyle(.secondary)
         }
     }
