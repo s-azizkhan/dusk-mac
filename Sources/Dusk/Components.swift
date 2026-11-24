@@ -106,10 +106,11 @@ struct Chip: View {
                 Text(preset.name).font(.geist(12, .medium))
             }
             .padding(.horizontal, 10).padding(.vertical, 6)
-            .foregroundStyle(selected ? Color.primary : Color.secondary)
+            .foregroundStyle(.white.opacity(selected ? 1 : 0.82))
             .background {
                 ZStack {
-                    Capsule().fill(.primary.opacity(0.06))
+                    Capsule().fill(.white.opacity(0.1))
+                        .overlay(Capsule().strokeBorder(.white.opacity(0.12), lineWidth: 0.8))
                     if selected {
                         Capsule().fill(Color.warm(preset.kelvin).opacity(0.28))
                             .overlay(Capsule().strokeBorder(Color.warm(preset.kelvin).opacity(0.6), lineWidth: 1))
@@ -148,7 +149,7 @@ struct ToggleRow: View {
                 .symbolEffect(.bounce, value: on)
             VStack(alignment: .leading, spacing: 1) {
                 Text(title).font(.geist(13, .medium))
-                Text(sub).font(.geist(11)).foregroundStyle(.secondary)
+                Text(sub).font(.geist(11)).foregroundStyle(.white.opacity(0.68))
             }
             Spacer(minLength: 4)
             GlowSwitch(isOn: $on, tint: tint, name: title)
@@ -189,7 +190,7 @@ struct BrightnessBars: View {
                         let isHover = st.hover == i
                         RoundedRectangle(cornerRadius: min(bw / 2, 3), style: .continuous)
                             .fill(on ? AnyShapeStyle(LinearGradient(colors: [tint, tint.opacity(0.55)], startPoint: .top, endPoint: .bottom))
-                                     : AnyShapeStyle(Color.white.opacity(isHover ? 0.22 : 0.09)))
+                                     : AnyShapeStyle(Color.white.opacity(isHover ? 0.28 : 0.14)))
                             .overlay(RoundedRectangle(cornerRadius: min(bw / 2, 3), style: .continuous)
                                 .strokeBorder(.white.opacity(isHover ? 0.6 : 0), lineWidth: 1))
                             .frame(width: bw, height: h)
@@ -214,7 +215,7 @@ struct BrightnessBars: View {
             .frame(height: 36)
             Text(verbatim: "\(Int((value * 100).rounded()))%")
                 .font(.geistMono(12, .medium))
-                .foregroundStyle(.secondary)
+                .foregroundStyle(.white.opacity(0.85))
                 .contentTransition(.numericText(value: value))
                 .frame(width: 38, alignment: .trailing)
                 .animation(.snappy, value: value)
@@ -320,7 +321,7 @@ struct GlassCard: ViewModifier {
             .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: radius, style: .continuous))
-            .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(.white.opacity(0.03)))
+            .background(RoundedRectangle(cornerRadius: radius, style: .continuous).fill(.black.opacity(0.22)))
             .overlay(
                 RoundedRectangle(cornerRadius: radius, style: .continuous)
                     .strokeBorder(LinearGradient(colors: [.white.opacity(0.22), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom), lineWidth: 0.8)
