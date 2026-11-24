@@ -2,7 +2,7 @@
 # Builds a universal (arm64 + x86_64) Dusk.app and Dusk-macOS.zip in ./build
 set -e
 cd "$(dirname "$0")"
-VERSION="${VERSION:-0.2.0}"
+VERSION="${VERSION:-0.2.1}"
 ARCHS="--arch arm64 --arch x86_64"
 swift build -c release $ARCHS
 BIN="$(swift build -c release $ARCHS --show-bin-path)/Dusk"
