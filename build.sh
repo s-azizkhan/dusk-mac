@@ -29,7 +29,20 @@ cat > "$APP/Contents/Info.plist" <<PL
 <key>NSHumanReadableCopyright</key><string>MIT License. Free and open source.</string>
 </dict></plist>
 PL
-codesign --force --sign - "$APP"
+# DEVELOPER_ID="Developer ID Application: Name (TEAMID)" signs for release; otherwise ad-hoc.
+if [ -n "$DEVELOPER_ID" ]; then
+  codesign --force --options runtime --timestamp --sign "$DEVELOPER_ID" "$APP"
+else
+  codesign --force --sign - "$APP"
+fi
 rm -f build/Dusk-macOS.zip
 ditto -c -k --keepParent "$APP" build/Dusk-macOS.zip
+# NOTARY_PROFILE=<name from `xcrun notarytool store-credentials`> notarizes and staples.
+if [ -n "$NOTARY_PROFILE" ]; then
+  xcrun notarytool submit build/Dusk-macOS.zip --keychain-profile "$NOTARY_PROFILE" --wait
+  xcrun stapler staple "$APP"
+  rm -f build/Dusk-macOS.zip
+  ditto -c -k --keepParent "$APP" build/Dusk-macOS.zip
+  spctl -a -vv "$APP"
+fi
 echo "Built $APP and build/Dusk-macOS.zip ($VERSION)"
