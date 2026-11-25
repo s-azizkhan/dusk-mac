@@ -80,6 +80,9 @@ struct ContentView: View {
         .animation(spring, value: c.scheduleOn)
         .animation(spring, value: c.gammaOK)
         .animation(spring, value: c.checks.map(\.text))
+        .onChange(of: c.selected) { haptic() }
+        .animation(spring, value: c.screens.count)
+        .animation(spring, value: c.selected)
         .onChange(of: c.startHour) { haptic() }
         .onChange(of: c.endHour) { haptic() }
     }
@@ -92,6 +95,9 @@ struct ContentView: View {
                                                 startPoint: .top, endPoint: .bottom))
             Text(settings ? "Settings" : "Dusk").font(.serif(22))
                 .contentTransition(.opacity)
+            if c.screens.count > 1 && !settings {
+                screenPicker.transition(.opacity.combined(with: .scale(scale: 0.9)))
+            }
             Spacer()
             Button { settingsF.on.toggle() } label: {
                 Image(systemName: settings ? "xmark" : "slider.horizontal.3")
@@ -107,6 +113,39 @@ struct ContentView: View {
             .accessibilityLabel(settings ? "Close settings" : "Open settings")
             GlowSwitch(isOn: $c.enabled, tint: tint, name: "Dusk", onIcon: "sun.max.fill", offIcon: "moon.fill")
         }
+    }
+
+    private var screenPicker: some View {
+        let cur = c.screens.first { $0.key == c.selected }
+        return Menu {
+            Picker("Screen", selection: $c.selected) {
+                Label("All screens", systemImage: "rectangle.on.rectangle").tag("all")
+                ForEach(c.screens) { s in
+                    Label(s.name, systemImage: s.builtin ? "laptopcomputer" : "display").tag(s.key)
+                }
+            }
+            .pickerStyle(.inline)
+        } label: {
+            HStack(spacing: 4) {
+                Image(systemName: cur == nil ? "rectangle.on.rectangle" : cur!.builtin ? "laptopcomputer" : "display")
+                    .font(.system(size: 10, weight: .semibold))
+                Text(cur?.name ?? "All screens").lineLimit(1).truncationMode(.tail)
+                Image(systemName: "chevron.down").font(.system(size: 8, weight: .bold)).opacity(0.7)
+            }
+            .font(.geist(11, .medium))
+            .foregroundStyle(.white.opacity(0.85))
+            .padding(.horizontal, 8).padding(.vertical, 4)
+            .frame(maxWidth: 112)
+            .background(Capsule().fill(.white.opacity(0.08)))
+            .overlay(Capsule().strokeBorder(.white.opacity(0.12), lineWidth: 0.6))
+            .contentShape(Capsule())
+        }
+        .menuStyle(.button)
+        .buttonStyle(.plain)
+        .menuIndicator(.hidden)
+        .fixedSize(horizontal: false, vertical: true)
+        .help("Pick the screen to change")
+        .accessibilityLabel("Screen to change")
     }
 
     private var mainPage: some View {

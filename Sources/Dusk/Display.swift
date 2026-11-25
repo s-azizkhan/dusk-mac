@@ -32,21 +32,40 @@ enum Display {
         return (c(r), c(g), c(b))
     }
 
-    /// Applies warmth + software dim to every display. Returns false if readback disagrees.
+    /// Applies warmth + software dim to one display. Returns false if readback disagrees.
     @discardableResult
-    static func applyGamma(kelvin: Double, dim all: Double, builtinDim: Double? = nil) -> Bool {
+    static func setGamma(_ id: CGDirectDisplayID, kelvin: Double, dim: Double) -> Bool {
         let (r, g, b) = rgb(kelvin: kelvin)
-        var ok = true
-        for id in activeDisplays() {
-            let dim = CGDisplayIsBuiltin(id) != 0 ? builtinDim ?? all : all
-            CGSetDisplayTransferByFormula(id, 0, Float(r * dim), 1, 0, Float(g * dim), 1, 0, Float(b * dim), 1)
-            var rMin: Float = 0, rMax: Float = 0, rGam: Float = 0
-            var gMin: Float = 0, gMax: Float = 0, gGam: Float = 0
-            var bMin: Float = 0, bMax: Float = 0, bGam: Float = 0
-            CGGetDisplayTransferByFormula(id, &rMin, &rMax, &rGam, &gMin, &gMax, &gGam, &bMin, &bMax, &bGam)
-            if abs(Double(rMax) - r * dim) > 0.02 { ok = false }
+        CGSetDisplayTransferByFormula(id, 0, Float(r * dim), 1, 0, Float(g * dim), 1, 0, Float(b * dim), 1)
+        var rMin: Float = 0, rMax: Float = 0, rGam: Float = 0
+        var gMin: Float = 0, gMax: Float = 0, gGam: Float = 0
+        var bMin: Float = 0, bMax: Float = 0, bGam: Float = 0
+        CGGetDisplayTransferByFormula(id, &rMin, &rMax, &rGam, &gMin, &gMax, &gGam, &bMin, &bMax, &bGam)
+        return abs(Double(rMax) - r * dim) <= 0.02
+    }
+
+    /// Stable per-monitor key, so a screen keeps its settings across reconnects and display ID changes.
+    static func key(_ id: CGDirectDisplayID) -> String {
+        let main = CGDisplayMirrorsDisplay(id) == kCGNullDirectDisplay ? id : CGDisplayMirrorsDisplay(id)
+        if CGDisplayIsBuiltin(main) != 0 { return "builtin" }
+        return "\(CGDisplayVendorNumber(main))-\(CGDisplayModelNumber(main))-\(CGDisplaySerialNumber(main))"
+    }
+
+    struct Screen: Identifiable, Equatable { let id: CGDirectDisplayID; let key: String; let name: String; let builtin: Bool }
+
+    /// Screens the user can pick (mirrors left out: they follow the screen they mirror). Built-in first.
+    static func screens() -> [Screen] {
+        var names: [CGDirectDisplayID: String] = [:]
+        for s in NSScreen.screens {
+            if let n = s.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID { names[n] = s.localizedName }
         }
-        return ok
+        return activeDisplays()
+            .filter { CGDisplayMirrorsDisplay($0) == kCGNullDirectDisplay }
+            .map { id in
+                let b = CGDisplayIsBuiltin(id) != 0
+                return Screen(id: id, key: key(id), name: names[id] ?? (b ? "Built-in Display" : "Display"), builtin: b)
+            }
+            .sorted { $0.builtin && !$1.builtin }
     }
 
     static func resetGamma() { CGDisplayRestoreColorSyncSettings() }

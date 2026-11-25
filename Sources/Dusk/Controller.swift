@@ -31,8 +31,13 @@ final class Controller: ObservableObject {
         }
     }
     @Published var sweepStart: Date?
-    @Published var kelvin: Double { didSet { d.set(kelvin, forKey: "kelvin"); apply() } }
-    @Published var brightness: Double { didSet { d.set(brightness, forKey: "brightness"); apply() } }
+    // kelvin/brightness show the selected screen ("all" = every screen at once).
+    @Published var kelvin: Double { didSet { guard !loading else { return }; store("k", kelvin); apply() } }
+    @Published var brightness: Double { didSet { guard !loading else { return }; store("b", brightness); apply() } }
+    @Published var screens: [Display.Screen] = []
+    @Published var selected: String { didSet { d.set(selected, forKey: "selectedScreen"); load() } }
+    private var looks: [String: [String: Double]]
+    private var loading = false
     @Published var flickerFree: Bool { didSet { d.set(flickerFree, forKey: "flickerFree"); apply() } }
     @Published var antiDither: Bool { didSet { d.set(antiDither, forKey: "antiDither"); Display.setDithering(disabled: antiDither) } }
     @Published var scheduleOn: Bool { didSet { d.set(scheduleOn, forKey: "scheduleOn"); apply() } }
@@ -51,6 +56,9 @@ final class Controller: ObservableObject {
         if let id = Display.builtin, let b = Backlight.get(id), b < 0.99 { d.set(max(Double(b), 0.05), forKey: "brightness") }
         d.register(defaults: ["enabled": true, "kelvin": 3400.0, "brightness": 1.0, "startHour": 20, "endHour": 7,
                               "flickerFree": !miniLED, "antiDither": true])
+        looks = d.dictionary(forKey: "screens") as? [String: [String: Double]] ?? [:]
+        if let id = Display.builtin, let b = Backlight.get(id), b < 0.99, looks["builtin"] != nil { looks["builtin"]?["b"] = max(Double(b), 0.05) }
+        selected = d.string(forKey: "selectedScreen") ?? "all"
         enabled = d.bool(forKey: "enabled")
         kelvin = d.double(forKey: "kelvin")
         brightness = d.double(forKey: "brightness")
@@ -61,12 +69,14 @@ final class Controller: ObservableObject {
         endHour = d.integer(forKey: "endHour")
         sounds = d.object(forKey: "sounds") as? Bool ?? true
         launchAtLogin = SMAppService.mainApp.status == .enabled
+        refreshScreens()
+        load()
 
         let nc = NSWorkspace.shared.notificationCenter
         nc.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: .main) { [weak self] _ in self?.apply() }
         CGDisplayRegisterReconfigurationCallback({ _, _, ctx in
             guard let ctx else { return }
-            DispatchQueue.main.async { Unmanaged<Controller>.fromOpaque(ctx).takeUnretainedValue().apply() }
+            DispatchQueue.main.async { let c = Unmanaged<Controller>.fromOpaque(ctx).takeUnretainedValue(); c.refreshScreens(); c.apply() }
         }, Unmanaged.passUnretained(self).toOpaque())
         // Light keep-alive (schedule, gamma resets by other apps). Loose tolerance lets macOS batch the wake-up.
         timer = Timer.scheduledTimer(withTimeInterval: 60, repeats: true) { [weak self] _ in self?.apply() }
@@ -75,13 +85,48 @@ final class Controller: ObservableObject {
         apply()
     }
 
+    // MARK: Per-screen warmth and brightness
+
+    /// A screen's own values, or the shared ones it hasn't been given its own yet.
+    func look(_ key: String) -> (k: Double, b: Double) {
+        (looks[key]?["k"] ?? d.double(forKey: "kelvin"), looks[key]?["b"] ?? d.double(forKey: "brightness"))
+    }
+
+    private func store(_ field: String, _ v: Double) {
+        if selected == "all" {
+            d.set(v, forKey: field == "k" ? "kelvin" : "brightness")
+            for s in screens { looks[s.key, default: [:]][field] = v }
+        } else {
+            looks[selected, default: [:]][field] = v
+        }
+        d.set(looks, forKey: "screens")
+    }
+
+    private func load() {
+        let l = look(selected == "all" ? screens.first?.key ?? "builtin" : selected)
+        loading = true
+        kelvin = l.k
+        brightness = l.b
+        loading = false
+    }
+
+    func refreshScreens() {
+        let now = Display.screens()
+        if now != screens { screens = now }
+        if selected != "all", !now.contains(where: { $0.key == selected }) || now.count < 2 { selected = "all" }
+    }
+
+    private var builtinB: Double { look("builtin").b }
+
     private var inNight: Bool {
         let h = Calendar.current.component(.hour, from: Date())
         return startHour <= endHour ? (h >= startHour && h < endHour) : (h >= startHour || h < endHour)
     }
 
-    // dim = total brightness of the built-in screen: backlight x gamma. ext = gamma dim on other screens.
-    private lazy var shown: (k: Double, dim: Double, ext: Double) = (6500, lastHW ?? 1, 1)
+    // Per display: warmth and total brightness. On the built-in screen dim = backlight x gamma; elsewhere gamma only.
+    typealias Look = (k: Double, dim: Double)
+    private var shown: [CGDirectDisplayID: Look] = [:]
+    private func shownLook(_ id: CGDirectDisplayID) -> Look { shown[id] ?? (6500, CGDisplayIsBuiltin(id) != 0 ? lastHW ?? 1 : 1) }
     private lazy var lastHW: Double? = Display.builtin.flatMap(Backlight.get).map(Double.init)
     private var wasActive = false
     private var anim: Timer?
@@ -92,18 +137,26 @@ final class Controller: ObservableObject {
         // Brightness keys or auto-brightness moved the backlight: follow the change instead of fighting it.
         if anim == nil, let id = Display.builtin, let last = lastHW, let b = Backlight.get(id).map(Double.init), abs(b - last) > 0.02 {
             lastHW = b
-            let next = min(max(brightness + b - last, 0.05), 1)
-            if abs(next - brightness) > 0.001 { brightness = next; return } // didSet re-applies
+            let next = min(max(builtinB + b - last, 0.05), 1)
+            if abs(next - builtinB) > 0.001 {
+                if selected == "builtin" || (selected == "all" && screens.first?.builtin == true) { brightness = next; return } // didSet re-applies
+                looks["builtin", default: [:]]["b"] = next
+                d.set(looks, forKey: "screens")
+            }
         }
         let animate = active != wasActive || anim != nil
         wasActive = active
         anim?.invalidate(); anim = nil
         let pin = flickerFree && active
-        let target = active ? (k: kelvin, dim: brightness, ext: brightness)
-                            : (k: 6500.0, dim: Display.builtin == nil ? 1 : max(brightness, minBacklight), ext: 1.0)
+        var target: [CGDirectDisplayID: Look] = [:]
+        for id in Display.activeDisplays() {
+            let builtin = CGDisplayIsBuiltin(id) != 0
+            let l = look(Display.key(id))
+            target[id] = active ? (l.k, l.b) : (6500, builtin ? max(builtinB, minBacklight) : 1)
+        }
 
         let finish = { [self] in
-            gammaOK = render(target.k, target.dim, target.ext, pin: pin)
+            gammaOK = render(target, pin: pin)
             shown = target
             if !active { Display.resetGamma() }
         }
@@ -116,25 +169,34 @@ final class Controller: ObservableObject {
             let x = min(Date().timeIntervalSince(start) / dur, 1)
             if x >= 1 { t.invalidate(); self.anim = nil; return finish() }
             let e = x < 0.5 ? 4 * x * x * x : 1 - pow(-2 * x + 2, 3) / 2
-            let m = 1e6 / from.k + (1e6 / target.k - 1e6 / from.k) * e
-            self.shown = (1e6 / m, from.dim + (target.dim - from.dim) * e, from.ext + (target.ext - from.ext) * e)
-            _ = self.render(self.shown.k, self.shown.dim, self.shown.ext, pin: pin)
+            var now: [CGDirectDisplayID: Look] = [:]
+            for (id, to) in target {
+                let a = from[id] ?? self.shownLook(id)
+                let m = 1e6 / a.k + (1e6 / to.k - 1e6 / a.k) * e
+                now[id] = (1e6 / m, a.dim + (to.dim - a.dim) * e)
+            }
+            self.shown = now
+            _ = self.render(now, pin: pin)
         }
     }
 
     /// Splits the built-in screen's brightness between backlight and gamma. Flicker-free holds the backlight
     /// at 100% and does it all in gamma; otherwise the backlight does the work down to its lowest step.
-    private func render(_ k: Double, _ total: Double, _ ext: Double, pin: Bool) -> Bool {
-        guard let id = Display.builtin else { return Display.applyGamma(kelvin: k, dim: ext) }
-        var hw = pin ? 1 : max(total, minBacklight)
-        let up = hw > (lastHW ?? hw)
-        if !up { setBacklight(id, hw) } // going darker: backlight first, so it never flashes brighter
-        var ok = Display.applyGamma(kelvin: k, dim: ext, builtinDim: total / hw)
-        if pin && !ok { // gamma didn't take: holding 100% would make the screen brighter
-            hw = max(total, minBacklight)
-            ok = Display.applyGamma(kelvin: k, dim: ext, builtinDim: total / hw)
+    private func render(_ looks: [CGDirectDisplayID: Look], pin: Bool) -> Bool {
+        var ok = true
+        for (id, l) in looks {
+            guard CGDisplayIsBuiltin(id) != 0 else { ok = Display.setGamma(id, kelvin: l.k, dim: l.dim) && ok; continue }
+            var hw = pin ? 1 : max(l.dim, minBacklight)
+            let up = hw > (lastHW ?? hw)
+            if !up { setBacklight(id, hw) } // going darker: backlight first, so it never flashes brighter
+            var g = Display.setGamma(id, kelvin: l.k, dim: l.dim / hw)
+            if pin && !g { // gamma didn't take: holding 100% would make the screen brighter
+                hw = max(l.dim, minBacklight)
+                g = Display.setGamma(id, kelvin: l.k, dim: l.dim / hw)
+            }
+            setBacklight(id, hw)
+            ok = ok && g
         }
-        setBacklight(id, hw)
         return ok
     }
 
@@ -168,7 +230,7 @@ final class Controller: ObservableObject {
         guard gammaOK else { return c(.warn, "macOS didn't accept the colour change, so Dusk left the backlight alone to keep the screen from getting brighter.") }
         guard let b = Backlight.get(id) else { return c(.warn, "Couldn't read the backlight on this Mac.") }
         guard b >= 0.99 else { return c(.warn, "Backlight is at \(pct(Double(b))), not 100%. Turn off \"Automatically adjust brightness\" in System Settings > Displays.") }
-        return c(.ok, "Working. The backlight is held at 100%, so it doesn't pulse, and Dusk dims the picture to \(pct(brightness)) instead.")
+        return c(.ok, "Working. The backlight is held at 100%, so it doesn't pulse, and Dusk dims the picture to \(pct(builtinB)) instead.")
     }
 
     private func ditherCheck() -> Check {
@@ -182,7 +244,7 @@ final class Controller: ObservableObject {
 
     func shutdown() {
         anim?.invalidate()
-        if let id = Display.builtin { Backlight.set(id, Float(max(wasActive ? brightness : shown.dim, minBacklight))) }
+        if let id = Display.builtin { Backlight.set(id, Float(max(wasActive ? builtinB : shownLook(id).dim, minBacklight))) }
         Display.resetGamma()
     }
 }
