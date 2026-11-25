@@ -4,8 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dusk: Free Blue Light Filter &amp; Flicker-Free Screen Dimmer for Mac</title>
-<meta name="description" content="Dusk is a free, open-source macOS menu-bar app. Warm your screen down to 500K, dim below minimum brightness, reduce PWM flicker and disable temporal dithering. Free alternative to f.lux, Night Shift and Sundown.">
-<meta name="keywords" content="blue light filter mac, night shift alternative, f.lux alternative, sundown alternative, screen dimmer mac, pwm flicker macbook, flicker free mac, temporal dithering apple silicon, red light filter mac, eye strain mac">
+<meta name="description" content="Dusk is a free, open-source macOS menu-bar app. Warm your screen down to 500K, dim below minimum brightness, reduce PWM flicker and set each monitor on its own. Free alternative to f.lux, Night Shift and Sundown.">
+<meta name="keywords" content="blue light filter mac, night shift alternative, f.lux alternative, sundown alternative, screen dimmer mac, pwm flicker macbook, flicker free mac, temporal dithering apple silicon, red light filter mac, eye strain mac, multiple monitors mac, external monitor flicker, ddc brightness mac">
 <link rel="canonical" href="https://s-azizkhan.github.io/dusk-mac/">
 <link rel="icon" href="icon.png">
 <link rel="apple-touch-icon" href="icon.png">
@@ -29,7 +29,7 @@
       "alternateName": "Dusk for Mac",
       "description": "Free, open-source macOS menu-bar app: blue light filter down to 500K, screen dimming below minimum brightness, PWM flicker-free mode and temporal dithering off on Apple silicon.",
       "applicationCategory": "UtilitiesApplication",
-      "softwareVersion": "0.3.0",
+      "softwareVersion": "0.4.0",
       "operatingSystem": "macOS 14 or later",
       "offers": {"@type": "Offer", "price": "0", "priceCurrency": "USD"},
       "license": "https://opensource.org/licenses/MIT",
@@ -37,7 +37,7 @@
       "codeRepository": "https://github.com/s-azizkhan/dusk-mac",
       "image": "https://s-azizkhan.github.io/dusk-mac/icon.png",
       "author": {"@type": "Person", "name": "s-azizkhan", "url": "https://github.com/s-azizkhan"},
-      "featureList": ["Blue light filter 500K-6500K", "Sundown on/off animation", "Real brightness control with software dimming below minimum", "Built-in flicker and dithering self-test", "Dim below minimum brightness", "PWM flicker-free mode", "Disable temporal dithering", "Night schedule", "No account, no telemetry"]
+      "featureList": ["Blue light filter 500K-6500K", "Sundown on/off animation", "Real brightness control with software dimming below minimum", "Built-in flicker and dithering self-test", "Dim below minimum brightness", "PWM flicker-free mode", "Disable temporal dithering", "Night schedule", "Separate settings for each screen", "Flicker-free on external monitors over DDC", "Mouse wheel control", "No account, no telemetry"]
     },
     {
       "@type": "FAQPage",
@@ -49,6 +49,8 @@
         {"@type": "Question", "name": "How do I reduce PWM flicker on a MacBook?", "acceptedAnswer": {"@type": "Answer", "text": "Flicker-free is on by default in Dusk. It holds the built-in backlight at 100% and lowers brightness in software through the gamma table, so the backlight is not pulsed."}},
         {"@type": "Question", "name": "How do I disable temporal dithering on Apple silicon?", "acceptedAnswer": {"@type": "Answer", "text": "Dusk turns on No dithering by default (Display health). It sets enableDither to false on IOMobileFramebufferAP. Check with: ioreg -lw0 | grep -i enableDither."}},
         {"@type": "Question", "name": "How is Dusk different from Night Shift?", "acceptedAnswer": {"@type": "Answer", "text": "Night Shift stops around 2700K and cannot dim below minimum brightness. Dusk goes down to 500K, dims to 5%, and adds flicker-free and anti-dithering modes."}},
+        {"@type": "Question", "name": "Can Dusk set each monitor differently?", "acceptedAnswer": {"@type": "Answer", "text": "Yes. With two or more screens, Dusk shows a screen picker. Each screen keeps its own warmth, brightness and on/off, and remembers them when you plug it back in."}},
+        {"@type": "Question", "name": "Does flicker-free work on an external monitor?", "acceptedAnswer": {"@type": "Answer", "text": "If the monitor supports DDC, yes. Dusk holds its backlight at full and dims the picture in software. Monitors that don't answer over DDC are left alone. It works with one external monitor at a time for now."}},
         {"@type": "Question", "name": "Does Dusk collect data?", "acceptedAnswer": {"@type": "Answer", "text": "No. Dusk makes no network requests and has no analytics. The source code is public on GitHub."}}
       ]
     }
@@ -161,6 +163,12 @@ input[type=range]::-moz-range-thumb{width:20px;height:20px;border:0;border-radiu
 @media(max-width:640px){.panel{position:relative;top:auto;right:auto;width:100%;margin-top:16px}}
 
 /* cards */
+.duo{display:flex;gap:22px;justify-content:center;align-items:flex-end;margin-top:48px;flex-wrap:wrap}
+.duo figure{margin:0;text-align:center}
+.duo .pane{position:relative;width:min(300px,80vw);aspect-ratio:16/10;border:8px solid #16141d;border-radius:14px;background:linear-gradient(160deg,#dfe8f5,#a9bcd6 55%,#5d7392);box-shadow:0 30px 60px rgba(0,0,0,.5);overflow:hidden}
+.duo .pane.big{width:min(400px,80vw)}
+.duo .pane::after{content:"";position:absolute;inset:0;background:var(--w);mix-blend-mode:multiply}
+.duo figcaption{margin-top:12px;font-family:"Geist Mono",ui-monospace,monospace;font-size:13px;color:var(--muted)}
 .grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px;margin-top:56px}
 .card{position:relative;overflow:hidden;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:28px;min-height:220px;display:flex;flex-direction:column;justify-content:flex-end;transition:transform .4s var(--ease),border-color .4s}
 .card:hover{transform:translateY(-4px);border-color:rgba(255,255,255,.18)}
@@ -334,9 +342,25 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
   </div>
 </section>
 
+<section id="screens">
+  <div class="wrap">
+    <div style="text-align:center"><span class="eyebrow rv">New in 0.4</span></div>
+    <h2 class="display rv">Every screen, <span class="accent">its own evening.</span></h2>
+    <p class="intro rv d1">Plug in a second screen and a picker shows up next to the Dusk name. Warm your laptop for reading and leave the monitor alone for photo work, or the other way round.</p>
+    <div class="duo rv d2" aria-hidden="true">
+      <figure><div class="pane" style="--w:rgba(255,120,30,.42)"></div><figcaption>MacBook · 2700K · 60%</figcaption></figure>
+      <figure><div class="pane big" style="--w:rgba(255,120,30,0)"></div><figcaption>Monitor · off</figcaption></figure>
+    </div>
+    <div class="grid3">
+      <div class="card rv"><div class="glow" style="background:#c2410c"></div><h3>Settings per screen</h3><p>Warmth, brightness and on/off for each screen. Unplug it and plug it back, it remembers.</p></div>
+      <div class="card rv d1"><div class="glow" style="background:#0f766e"></div><h3>Flicker-free on monitors</h3><p>If your monitor supports DDC, Dusk holds its backlight at full and dims the picture instead.</p></div>
+      <div class="card rv d2"><div class="glow" style="background:#6d28d9"></div><h3>Scroll to adjust</h3><p>Hover the dial or the brightness bars and turn your mouse wheel. Up is warmer and brighter.</p></div>
+    </div>
+  </div>
+</section>
+
 <section id="sundown">
   <div class="wrap">
-    <div style="text-align:center"><span class="eyebrow rv">New in 0.3</span></div>
     <h2 class="display rv">Switch on, and <span class="accent">the sun sets.</span></h2>
     <p class="intro rv d1">Turning Dusk on plays a short scene across your screen: the sun sinks, starry curtains close and burn away into embers. Turning it off opens them to a sunrise. It skips itself if you use Reduce motion.</p>
     <div class="demo rv d2">
@@ -480,6 +504,8 @@ footer a{text-decoration:none}footer a:hover{color:var(--text)}
       <details><summary>Does the brightness slider change my Mac's real brightness?</summary><p>Yes. With flicker-free off, it moves the real screen brightness and only dims in software below the lowest step. With flicker-free on, the backlight stays at 100% and Dusk dims in software so it never pulses.</p></details>
       <details><summary>Does flicker-free work on every MacBook?</summary><p>It helps screens that pulse their backlight when dimmed. Mini-LED MacBook Pros (14" and 16", 2021 and later) pulse at every brightness, even 100%, so it can't help there. Dusk spots this, says so, and leaves it off by default.</p></details>
       <details><summary>How is Dusk different from Night Shift?</summary><p>Night Shift stops around 2700K. Dusk goes to 500K, dims to 5% and adds flicker-free and anti-dithering modes.</p></details>
+      <details><summary>Can I set each monitor differently?</summary><p>Yes. With two or more screens, a picker shows up next to the Dusk name. Pick All screens or one screen. Each keeps its own warmth, brightness and on/off.</p></details>
+      <details><summary>Does flicker-free work on an external monitor?</summary><p>If the monitor supports DDC, yes: Dusk holds its backlight at full and dims the picture in software. Monitors that don't answer over DDC are left alone. One external monitor at a time for now.</p></details>
       <details><summary>Does Dusk help with sleep or eye strain?</summary><p>Dusk is a display utility, not a medical device. Many people find a warmer, dimmer screen more comfortable at night.</p></details>
       <details><summary>Why does macOS warn me when I open it?</summary><p>This early build is not notarised yet. Run <code>xattr -dr com.apple.quarantine /Applications/Dusk.app</code> once, then open it normally.</p></details>
       <details><summary>Does Dusk collect data?</summary><p>No. No network requests, no analytics. The full source is on GitHub.</p></details>

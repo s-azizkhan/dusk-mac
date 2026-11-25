@@ -16,6 +16,9 @@
 - Software dimming to 5%
 - Flicker-free: backlight held at 100% via DisplayServices, dimming done in the gamma table
 - Disable temporal dithering: IORegistry `enableDither = false` on IOMobileFramebufferAP
+- Separate warmth, brightness and on/off for each screen, with a screen picker when 2+ screens are connected
+- Flicker-free on an external monitor over DDC/CI (one external monitor at a time)
+- Mouse wheel or trackpad scroll over the dial and brightness bars
 - Night schedule, launch at login
 
 ## Docs
