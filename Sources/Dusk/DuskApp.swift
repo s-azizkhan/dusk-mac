@@ -151,10 +151,16 @@ struct ContentView: View {
     private var mainPage: some View {
         VStack(spacing: 14) {
             WarmthDial(kelvin: $c.kelvin, enabled: $c.power, presetName: presetName)
+                .scrollAdjust(enabled: c.power) { n in // wheel up = warmer, 100 K a notch
+                    c.kelvin = min(max(c.kelvin - n * 100, 500), 6500); Sound.shared.tick(c.kelvin / 6500)
+                }
                 .help("Drag the ring to set warmth. Click the center to turn Dusk on or off.")
             VStack(alignment: .leading, spacing: 12) {
                 label("Brightness", icon: "sun.min.fill")
                 BrightnessBars(value: $c.brightness, tint: tint)
+                    .scrollAdjust(enabled: c.power) { n in // wheel up = brighter, one bar a notch
+                        c.brightness = min(max(c.brightness + n * 0.05, 0.05), 1); Sound.shared.tick(c.brightness)
+                    }
                 FlowLayout(spacing: 6) {
                     ForEach(Preset.all) { p in
                         Chip(preset: p, selected: abs(p.kelvin - c.kelvin) < 1, ns: ns) {

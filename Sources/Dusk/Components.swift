@@ -409,3 +409,44 @@ struct DustLayer: View {
         .accessibilityHidden(true)
     }
 }
+
+/// Mouse wheel or two-finger scroll over a control. `step` gets +1 per wheel notch "up" (trackpads give fractions).
+private final class ScrollState: ObservableObject {
+    var hover = false
+    var enabled = false
+    var monitor: Any?
+    var acc = 0.0
+}
+
+private struct ScrollAdjust: ViewModifier {
+    let enabled: Bool
+    let step: (Double) -> Void
+    @StateObject private var st = ScrollState()
+
+    func body(content: Content) -> some View {
+        content
+            .onHover { st.hover = $0 }
+            .onChange(of: enabled, initial: true) { _, v in st.enabled = v }
+            .onAppear {
+                st.monitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { [st] e in
+                    guard st.hover, st.enabled else { return e }
+                    let dy = Double(e.scrollingDeltaY) * (e.isDirectionInvertedFromDevice ? -1 : 1)
+                    if e.hasPreciseScrollingDeltas {
+                        st.acc += dy / 12 // trackpad: about one step per 12 pt of travel
+                        let whole = st.acc.rounded(.towardZero)
+                        if whole != 0 { st.acc -= whole; step(whole) }
+                    } else if dy != 0 {
+                        step(dy > 0 ? 1 : -1)
+                    }
+                    return nil
+                }
+            }
+            .onDisappear { if let m = st.monitor { NSEvent.removeMonitor(m) }; st.monitor = nil }
+    }
+}
+
+extension View {
+    func scrollAdjust(enabled: Bool, step: @escaping (Double) -> Void) -> some View {
+        modifier(ScrollAdjust(enabled: enabled, step: step))
+    }
+}
