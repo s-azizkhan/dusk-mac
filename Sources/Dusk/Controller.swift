@@ -183,19 +183,20 @@ final class Controller: ObservableObject {
         let animate = now.contains { wasActive[$0.key] != $0.value } || anim != nil
         wasActive = now
         anim?.invalidate(); anim = nil
-        let pin = flickerFree && Display.builtin.map(isActive) == true
+        let pin = flickerFree && !Display.builtinIsMiniLED && Display.builtin.map(isActive) == true // mini-LED pulses at 100% too
         var target: [CGDirectDisplayID: Look] = [:]
         for id in Display.activeDisplays() {
             let builtin = CGDisplayIsBuiltin(id) != 0
             let l = look(Display.key(id))
             // ponytail: a screen that's off while others stay on gets a plain ramp, not its ColorSync profile
-            target[id] = isActive(id) ? (l.k, l.b) : (6500, builtin ? max(builtinB, minBacklight) : 1)
+            target[id] = isActive(id) ? (l.k, l.b * ddcScale(Display.key(id))) : (6500, builtin ? max(builtinB, minBacklight) : 1)
         }
 
         let finish = { [self] in
             gammaOK = render(target, pin: pin)
             shown = target
             if !active { Display.resetGamma() }
+            syncDDC(live: isActive)
         }
         guard animate else { return finish() }
 
@@ -243,6 +244,52 @@ final class Controller: ObservableObject {
         lastHW = v
     }
 
+    // MARK: Flicker-free on external monitors (DDC)
+
+    enum DDCState: Equatable { case unsupported, held }
+    @Published private(set) var ddc: [String: DDCState] = [:]
+    private var ddcBusy: Set<String> = []
+    private let ddcQ = DispatchQueue(label: "dusk.ddc")
+
+    /// While the monitor is held at full brightness, gamma also carries the level it was at, so nothing jumps.
+    private func ddcScale(_ key: String) -> Double {
+        guard ddc[key] == .held, let s = looks[key]?["ddcScale"] else { return 1 }
+        return s
+    }
+
+    /// Holds each active external monitor at 100% over DDC when flicker-free is on; gives it back otherwise.
+    /// DDC is slow (~0.1 s), so it runs off the main thread and only when the wanted state changes.
+    private func syncDDC(live: (CGDirectDisplayID) -> Bool) {
+        for s in screens where !s.builtin && !ddcBusy.contains(s.key) {
+            let want = flickerFree && live(s.id)
+            let held = ddc[s.key] == .held
+            guard want != held, !(want && ddc[s.key] == .unsupported) else { continue }
+            ddcBusy.insert(s.key)
+            let key = s.key, id = s.id, saved = looks[key]?["ddc0"]
+            ddcQ.async { [weak self] in
+                var state: DDCState? = nil
+                var orig: Double? = nil, scale: Double? = nil
+                if let av = DDC.service(for: id), let b = DDC.brightness(av) {
+                    if want {
+                        let o = saved ?? Double(b.cur) // a saved value means Dusk already raised it (crash or quit)
+                        if DDC.setBrightness(av, b.max) { state = .held; orig = o; scale = max(o / Double(b.max), 0.05) }
+                    } else if let o = saved {
+                        DDC.setBrightness(av, Int(o))
+                    }
+                } else if want { state = .unsupported }
+                DispatchQueue.main.async {
+                    guard let self else { return }
+                    self.ddcBusy.remove(key)
+                    self.ddc[key] = state
+                    if let orig, let scale { self.looks[key, default: [:]]["ddc0"] = orig; self.looks[key]?["ddcScale"] = scale }
+                    if state == nil { self.looks[key]?["ddc0"] = nil; self.looks[key]?["ddcScale"] = nil }
+                    self.d.set(self.looks, forKey: "screens")
+                    self.apply()
+                }
+            }
+        }
+    }
+
     // MARK: Self-test for the settings page
 
     enum Health { case ok, warn, off }
@@ -252,7 +299,9 @@ final class Controller: ObservableObject {
     func runChecks() {
         apply() // re-pin and re-apply first, so the result shows the real current state
         if antiDither { Display.setDithering(disabled: true) }
-        checks = [flickerCheck(), ditherCheck()]
+        ddc = ddc.filter { $0.value != .unsupported } // probe again on test
+        apply()
+        checks = [flickerCheck()] + screens.filter { !$0.builtin }.map(externalCheck) + [ditherCheck()]
     }
 
     private func flickerCheck() -> Check {
@@ -270,6 +319,18 @@ final class Controller: ObservableObject {
         return c(.ok, "Working. The backlight is held at 100%, so it doesn't pulse, and Dusk dims the picture to \(pct(builtinB)) instead.")
     }
 
+    private func externalCheck(_ s: Display.Screen) -> Check {
+        func c(_ st: Health, _ t: String) -> Check { Check(id: "ext-\(s.key)", state: st, text: "\(s.name): \(t)") }
+        guard flickerFree else { return c(.off, "flicker-free is off.") }
+        guard on(s.key), enabled else { return c(.off, "Dusk is off for this screen.") }
+        if screens.filter({ !$0.builtin }).count > 1 { return c(.warn, "flicker-free works on one external screen at a time for now.") }
+        switch ddc[s.key] {
+        case .held: return c(.ok, "the monitor is held at full brightness over DDC, and Dusk dims the picture instead.")
+        case .unsupported: return c(.warn, "the monitor didn't answer over DDC. On M1 Pro and Max MacBook Pros the HDMI port doesn't pass DDC: use USB-C or DisplayPort, and turn on DDC/CI in the monitor's menu. Or set the monitor to 100% yourself and dim it here.")
+        case nil: return c(.warn, "checking the monitor over DDC. Press Test again in a moment.")
+        }
+    }
+
     private func ditherCheck() -> Check {
         func c(_ s: Health, _ t: String) -> Check { Check(id: "dither", state: s, text: t) }
         guard let states = Display.ditherStates() else { return c(.warn, "Not available on this Mac. It needs Apple silicon (M1 or later).") }
@@ -281,6 +342,11 @@ final class Controller: ObservableObject {
 
     func shutdown() {
         anim?.invalidate()
+        for s in screens where ddc[s.key] == .held {
+            if let av = DDC.service(for: s.id), let o = looks[s.key]?["ddc0"] { DDC.setBrightness(av, Int(o)) }
+            looks[s.key]?["ddc0"] = nil; looks[s.key]?["ddcScale"] = nil
+        }
+        d.set(looks, forKey: "screens")
         if let id = Display.builtin { Backlight.set(id, Float(max(wasActive[id] == true ? builtinB : shownLook(id).dim, minBacklight))) }
         Display.resetGamma()
     }

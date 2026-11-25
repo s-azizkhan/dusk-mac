@@ -171,7 +171,7 @@ struct ContentView: View {
     private var settingsPage: some View {
         VStack(spacing: 12) {
             VStack(spacing: 12) {
-                ToggleRow(icon: "waveform.path.ecg", title: "Flicker-free", sub: Display.builtinIsMiniLED ? "Can't help mini-LED (XDR) screens" : "Stops the backlight pulsing when dimmed", on: $c.flickerFree, tint: .mint)
+                ToggleRow(icon: "waveform.path.ecg", title: "Flicker-free", sub: c.screens.count > 1 ? (Display.builtinIsMiniLED ? "Holds external monitors at 100% (DDC)" : "Also holds external monitors at 100% (DDC)") : Display.builtinIsMiniLED ? "Can't help mini-LED (XDR) screens" : "Stops the backlight pulsing when dimmed", on: $c.flickerFree, tint: .mint)
                 ToggleRow(icon: "square.grid.3x3.fill", title: "No dithering", sub: "Stops faint pixel shimmer", on: $c.antiDither, tint: .cyan)
                 Button { c.runChecks(); haptic() } label: {
                     Label(c.checks.isEmpty ? "Test these" : "Test again", systemImage: "checkmark.seal")
@@ -188,7 +188,9 @@ struct ContentView: View {
                     .frame(maxWidth: .infinity, alignment: .leading)
                     .transition(.opacity.combined(with: .move(edge: .top)))
                     Group {
-                        if k.id == "flicker" {
+                        if k.id.hasPrefix("ext-") {
+                            EmptyView()
+                        } else if k.id == "flicker" {
                             WaveGraphic(duty: k.state == .ok ? nil : Display.builtinIsMiniLED ? 0.85 : 0.45, tint: k.state == .ok ? .mint : .orange)
                         } else {
                             DitherGraphic(shimmer: k.state != .ok)
@@ -196,7 +198,7 @@ struct ContentView: View {
                     }
                     .transition(.opacity)
                     Button {
-                        if k.id == "flicker" { ScreenTest.open(FlickerScreenTest()) }
+                        if k.id == "flicker" || k.id.hasPrefix("ext-") { ScreenTest.open(FlickerScreenTest()) }
                         else { ScreenTest.open(DitherScreenTest(c: c), onClose: { [c] in Display.setDithering(disabled: c.antiDither) }) }
                     } label: {
                         Label("Try it on screen", systemImage: "rectangle.inset.filled")
