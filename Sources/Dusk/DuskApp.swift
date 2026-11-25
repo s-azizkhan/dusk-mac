@@ -57,8 +57,8 @@ struct ContentView: View {
         .font(.geist(13))
         .background {
             ZStack(alignment: .top) {
-                LinearGradient(colors: [tint.opacity(c.enabled ? 0.26 : 0.04), .clear], startPoint: .top, endPoint: .center)
-                DustLayer(tint: tint).opacity(c.enabled ? 1 : 0.35)
+                LinearGradient(colors: [tint.opacity(c.power ? 0.26 : 0.04), .clear], startPoint: .top, endPoint: .center)
+                DustLayer(tint: tint).opacity(c.power ? 1 : 0.35)
                 Image(nsImage: Grain.image).resizable(resizingMode: .tile)
                     .opacity(0.045).blendMode(.overlay)
             }
@@ -70,12 +70,12 @@ struct ContentView: View {
         .environment(\.colorScheme, .dark)
         .overlay {
             if let s = c.sweepStart {
-                SweepView(start: s, on: c.enabled)
+                SweepView(start: s, on: c.sweepOn)
                     .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
             }
         }
         .overlay(RoundedRectangle(cornerRadius: 20, style: .continuous).strokeBorder(.white.opacity(0.08), lineWidth: 1).allowsHitTesting(false))
-        .animation(.easeInOut(duration: SweepView.duration), value: c.enabled)
+        .animation(.easeInOut(duration: SweepView.duration), value: c.power)
         .animation(.spring(response: 0.42, dampingFraction: 0.86), value: settings)
         .animation(spring, value: c.scheduleOn)
         .animation(spring, value: c.gammaOK)
@@ -111,7 +111,7 @@ struct ContentView: View {
             .foregroundStyle(.secondary)
             .help(settings ? "Back" : "Settings")
             .accessibilityLabel(settings ? "Close settings" : "Open settings")
-            GlowSwitch(isOn: $c.enabled, tint: tint, name: "Dusk", onIcon: "sun.max.fill", offIcon: "moon.fill")
+            GlowSwitch(isOn: $c.power, tint: tint, name: "Dusk", onIcon: "sun.max.fill", offIcon: "moon.fill")
         }
     }
 
@@ -121,7 +121,7 @@ struct ContentView: View {
             Picker("Screen", selection: $c.selected) {
                 Label("All screens", systemImage: "rectangle.on.rectangle").tag("all")
                 ForEach(c.screens) { s in
-                    Label(s.name, systemImage: s.builtin ? "laptopcomputer" : "display").tag(s.key)
+                    Label(c.on(s.key) ? s.name : "\(s.name) · off", systemImage: s.builtin ? "laptopcomputer" : "display").tag(s.key)
                 }
             }
             .pickerStyle(.inline)
@@ -150,7 +150,7 @@ struct ContentView: View {
 
     private var mainPage: some View {
         VStack(spacing: 14) {
-            WarmthDial(kelvin: $c.kelvin, enabled: $c.enabled, presetName: presetName)
+            WarmthDial(kelvin: $c.kelvin, enabled: $c.power, presetName: presetName)
                 .help("Drag the ring to set warmth. Click the center to turn Dusk on or off.")
             VStack(alignment: .leading, spacing: 12) {
                 label("Brightness", icon: "sun.min.fill")
@@ -164,7 +164,7 @@ struct ContentView: View {
                 }
             }
             .glassCard()
-            .disabled(!c.enabled).opacity(c.enabled ? 1 : 0.6)
+            .disabled(!c.power).opacity(c.power ? 1 : 0.6)
         }
     }
 

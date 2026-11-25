@@ -162,11 +162,14 @@ enum ScreenSweep {
     private static var windows: [NSWindow] = []
     private static var token = 0
 
-    static func play(on: Bool) {
+    static func play(on: Bool, only ids: Set<CGDirectDisplayID>? = nil) {
         guard !NSWorkspace.shared.accessibilityDisplayShouldReduceMotion else { return }
         windows.forEach { $0.close() }
         let start = Date()
-        windows = NSScreen.screens.map { screen in
+        windows = NSScreen.screens.filter { s in
+            guard let ids else { return true }
+            return (s.deviceDescription[NSDeviceDescriptionKey("NSScreenNumber")] as? CGDirectDisplayID).map(ids.contains) ?? false
+        }.map { screen in
             let w = NSWindow(contentRect: screen.frame, styleMask: .borderless, backing: .buffered, defer: false)
             w.isReleasedWhenClosed = false
             w.isOpaque = false

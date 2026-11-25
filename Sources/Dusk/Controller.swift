@@ -18,19 +18,52 @@ final class Controller: ObservableObject {
     private let d = UserDefaults.standard
     private var timer: Timer?
 
+    /// Master switch. Each screen also has its own on/off (`power` while that screen is picked).
     @Published var enabled: Bool {
         didSet {
             d.set(enabled, forKey: "enabled")
             apply()
-            let start = Date()
-            sweepStart = start
-            ScreenSweep.play(on: enabled)
-            DispatchQueue.main.asyncAfter(deadline: .now() + SweepView.duration) { [weak self] in
-                if self?.sweepStart == start { self?.sweepStart = nil }
-            }
+            sweep(on: enabled, ids: Set(screens.filter { on($0.key) }.map(\.id)))
         }
     }
     @Published var sweepStart: Date?
+    @Published var sweepOn = true
+
+    private func sweep(on: Bool, ids: Set<CGDirectDisplayID>) {
+        let start = Date()
+        sweepOn = on
+        sweepStart = start
+        ScreenSweep.play(on: on, only: ids)
+        DispatchQueue.main.asyncAfter(deadline: .now() + SweepView.duration) { [weak self] in
+            if self?.sweepStart == start { self?.sweepStart = nil }
+        }
+    }
+
+    func on(_ key: String) -> Bool { (looks[key]?["on"] ?? 1) > 0.5 }
+
+    private func setOn(_ key: String, _ v: Bool) { looks[key, default: [:]]["on"] = v ? 1 : 0 }
+
+    /// On/off for what the picker shows: one screen, or all of them.
+    var power: Bool {
+        get { selected == "all" ? enabled && (screens.isEmpty || screens.contains { on($0.key) }) : enabled && on(selected) }
+        set {
+            objectWillChange.send()
+            if selected == "all" {
+                if newValue { screens.forEach { setOn($0.key, true) } }
+                d.set(looks, forKey: "screens")
+                if enabled != newValue { enabled = newValue } else { apply(); sweep(on: newValue, ids: Set(screens.map(\.id))) }
+                return
+            }
+            let id = screens.first { $0.key == selected }.map { Set([$0.id]) } ?? []
+            if newValue && !enabled { screens.forEach { setOn($0.key, $0.key == selected) } } // master was off: turn on just this one
+            setOn(selected, newValue)
+            d.set(looks, forKey: "screens")
+            if newValue && !enabled { enabled = true; return }
+            if !newValue && !screens.contains(where: { on($0.key) }) { enabled = false; return }
+            apply()
+            sweep(on: newValue, ids: id)
+        }
+    }
     // kelvin/brightness show the selected screen ("all" = every screen at once).
     @Published var kelvin: Double { didSet { guard !loading else { return }; store("k", kelvin); apply() } }
     @Published var brightness: Double { didSet { guard !loading else { return }; store("b", brightness); apply() } }
@@ -128,12 +161,14 @@ final class Controller: ObservableObject {
     private var shown: [CGDirectDisplayID: Look] = [:]
     private func shownLook(_ id: CGDirectDisplayID) -> Look { shown[id] ?? (6500, CGDisplayIsBuiltin(id) != 0 ? lastHW ?? 1 : 1) }
     private lazy var lastHW: Double? = Display.builtin.flatMap(Backlight.get).map(Double.init)
-    private var wasActive = false
+    private var wasActive: [CGDirectDisplayID: Bool] = [:]
     private var anim: Timer?
     private let minBacklight = 1.0 / 16 // dimmest brightness-key step; below it Dusk dims in software
 
     func apply() {
-        let active = enabled && (!scheduleOn || inNight)
+        let live = enabled && (!scheduleOn || inNight)
+        let isActive = { (id: CGDirectDisplayID) in live && self.on(Display.key(id)) }
+        let active = Display.activeDisplays().contains(where: isActive)
         // Brightness keys or auto-brightness moved the backlight: follow the change instead of fighting it.
         if anim == nil, let id = Display.builtin, let last = lastHW, let b = Backlight.get(id).map(Double.init), abs(b - last) > 0.02 {
             lastHW = b
@@ -144,15 +179,17 @@ final class Controller: ObservableObject {
                 d.set(looks, forKey: "screens")
             }
         }
-        let animate = active != wasActive || anim != nil
-        wasActive = active
+        let now = Dictionary(uniqueKeysWithValues: Display.activeDisplays().map { ($0, isActive($0)) })
+        let animate = now.contains { wasActive[$0.key] != $0.value } || anim != nil
+        wasActive = now
         anim?.invalidate(); anim = nil
-        let pin = flickerFree && active
+        let pin = flickerFree && Display.builtin.map(isActive) == true
         var target: [CGDirectDisplayID: Look] = [:]
         for id in Display.activeDisplays() {
             let builtin = CGDisplayIsBuiltin(id) != 0
             let l = look(Display.key(id))
-            target[id] = active ? (l.k, l.b) : (6500, builtin ? max(builtinB, minBacklight) : 1)
+            // ponytail: a screen that's off while others stay on gets a plain ramp, not its ColorSync profile
+            target[id] = isActive(id) ? (l.k, l.b) : (6500, builtin ? max(builtinB, minBacklight) : 1)
         }
 
         let finish = { [self] in
@@ -222,7 +259,7 @@ final class Controller: ObservableObject {
         let pct = { (v: Double) in "\(Int((v * 100).rounded()))%" }
         func c(_ s: Health, _ t: String) -> Check { Check(id: "flicker", state: s, text: t) }
         guard flickerFree else { return c(.off, "Flicker-free is off. At low brightness the backlight dims by pulsing on and off very fast (PWM), which some eyes feel.") }
-        guard enabled && (!scheduleOn || inNight) else { return c(.off, "Dusk is paused right now, so the backlight is back in your hands.") }
+        guard enabled && (!scheduleOn || inNight) && on("builtin") else { return c(.off, "Dusk is off for this screen right now, so the backlight is back in your hands.") }
         guard let id = Display.builtin else { return c(.warn, "No built-in screen found. Flicker-free works on MacBook screens only.") }
         if Display.builtinIsMiniLED {
             return c(.warn, "This Mac has a mini-LED (XDR) screen. Its backlight pulses about 15,000 times a second at every brightness, even 100%, so flicker-free can't remove it here and only uses extra battery. You can turn it off.")
@@ -244,7 +281,7 @@ final class Controller: ObservableObject {
 
     func shutdown() {
         anim?.invalidate()
-        if let id = Display.builtin { Backlight.set(id, Float(max(wasActive ? builtinB : shownLook(id).dim, minBacklight))) }
+        if let id = Display.builtin { Backlight.set(id, Float(max(wasActive[id] == true ? builtinB : shownLook(id).dim, minBacklight))) }
         Display.resetGamma()
     }
 }
